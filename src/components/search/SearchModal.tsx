@@ -80,7 +80,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Cerca comune o località (es. Bergamo, Lecco)..."
+            placeholder="Cerca comune, via o quartiere (es. Milano Bicocca, Bergamo)..."
             className="flex-1 bg-transparent text-sm text-slate-100 placeholder-slate-500 outline-none"
           />
           {query && (

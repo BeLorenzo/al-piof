@@ -269,13 +269,26 @@ export function buildRainComparison(
 
   if (valid.length === 0) return null;
 
-  const wetCount = valid.filter((i) => i.value >= 0.2).length;
   const total = valid.length;
+  const maxRain = Math.max(...valid.map((i) => i.value));
+
+  // In meteorologia accumuli < 0.5 mm in 24h sono considerate tracce non significative
+  if (maxRain < 0.5) {
+    return {
+      values: valid.map((v) => ({ ...v, value: Math.round(v.value * 10) / 10 })),
+      wetModelsCount: 0,
+      totalModelsCount: total,
+      concordancePct: 100,
+      concordanceLabel: 'Tutti concordi: tempo asciutto',
+    };
+  }
+
+  const wetCount = valid.filter((i) => i.value >= 0.5).length;
   const wetRatio = wetCount / total;
   const concordanceRatio = Math.max(wetRatio, 1 - wetRatio);
   const concordancePct = Math.round(concordanceRatio * 100);
 
-  let concordanceLabel = 'Tutti concordi: asciutto';
+  let concordanceLabel = 'Tutti concordi: tempo asciutto';
   if (wetCount === total) {
     concordanceLabel = 'Tutti concordi: pioggia';
   } else if (wetCount === 0) {
@@ -295,10 +308,33 @@ export function buildRainComparison(
   };
 }
 
+export function getLeadTimeInfo(dayIndex: number): {
+  horizon: string;
+  factor: number;
+} {
+  switch (dayIndex) {
+    case 0:
+      return { horizon: 'Brevissimo termine (0-24h)', factor: 1.0 };
+    case 1:
+      return { horizon: 'Breve termine (24-48h)', factor: 0.94 };
+    case 2:
+      return { horizon: 'Breve-medio termine (48-72h)', factor: 0.86 };
+    case 3:
+      return { horizon: 'Medio termine (3-4 giorni)', factor: 0.76 };
+    case 4:
+      return { horizon: 'Medio termine (4-5 giorni)', factor: 0.68 };
+    case 5:
+      return { horizon: 'Tendenza (5-6 giorni)', factor: 0.58 };
+    default:
+      return { horizon: 'Tendenza a lungo termine (+6 giorni)', factor: 0.50 };
+  }
+}
+
 export function calculateDayModelComparison(
   tempMaxItems: { modelName: string; modelId: string; value: number | null | undefined }[],
   tempMinItems: { modelName: string; modelId: string; value: number | null | undefined }[],
-  rainItems: { modelName: string; modelId: string; value: number | null | undefined }[]
+  rainItems: { modelName: string; modelId: string; value: number | null | undefined }[],
+  dayIndex: number = 0
 ): DayModelComparison | undefined {
   const tempMax = buildMetricComparison(tempMaxItems);
   const tempMin = buildMetricComparison(tempMinItems);
@@ -306,16 +342,36 @@ export function calculateDayModelComparison(
 
   if (!tempMax || !tempMin || !rain) return undefined;
 
-  let score = 100 - tempMax.spread * 12 - tempMin.spread * 8 - (100 - rain.concordancePct) * 0.4;
-  score = Math.max(25, Math.min(99, Math.round(score)));
+  // Penalità termica calibrata realisticamente (spread <= 1°C è quasi unanimità)
+  const maxPenalty =
+    tempMax.spread <= 1.0
+      ? tempMax.spread * 3
+      : tempMax.spread <= 2.0
+      ? 3 + (tempMax.spread - 1.0) * 8
+      : 11 + (tempMax.spread - 2.0) * 14;
+
+  const minPenalty =
+    tempMin.spread <= 1.0
+      ? tempMin.spread * 2
+      : tempMin.spread <= 2.0
+      ? 2 + (tempMin.spread - 1.0) * 6
+      : 8 + (tempMin.spread - 2.0) * 10;
+
+  // Penalità pioggia: zero se le piogge sono sotto 0.5 mm
+  const maxRain = Math.max(...rain.values.map((v) => v.value));
+  const rainPenalty = maxRain < 0.5 ? 0 : (100 - rain.concordancePct) * 0.25;
+
+  const baseScore = Math.max(30, 100 - maxPenalty - minPenalty - rainPenalty);
+  const leadTime = getLeadTimeInfo(dayIndex);
+  const finalScore = Math.max(25, Math.min(99, Math.round(baseScore * leadTime.factor)));
 
   let overallReliability: 'Alta' | 'Media' | 'Bassa' = 'Alta';
   let colorClass = 'text-emerald-400';
 
-  if (score < 60 || tempMax.spread > 3.0) {
+  if (finalScore < 55) {
     overallReliability = 'Bassa';
     colorClass = 'text-orange-400';
-  } else if (score < 80 || tempMax.spread > 1.6) {
+  } else if (finalScore < 78) {
     overallReliability = 'Media';
     colorClass = 'text-yellow-400';
   }
@@ -325,8 +381,10 @@ export function calculateDayModelComparison(
     tempMin,
     rain,
     overallReliability,
-    overallScore: score,
+    overallScore: finalScore,
     colorClass,
+    leadTimeHorizon: leadTime.horizon,
+    leadTimeFactor: leadTime.factor,
   };
 }
 
@@ -339,16 +397,26 @@ export function calculateHourlyModelComparison(
 
   if (!temperature || !rain) return undefined;
 
-  let score = 100 - temperature.spread * 15 - (100 - rain.concordancePct) * 0.35;
+  const tempPenalty =
+    temperature.spread <= 1.0
+      ? temperature.spread * 3
+      : temperature.spread <= 2.0
+      ? 3 + (temperature.spread - 1.0) * 8
+      : 11 + (temperature.spread - 2.0) * 14;
+
+  const maxRain = Math.max(...rain.values.map((v) => v.value));
+  const rainPenalty = maxRain < 0.2 ? 0 : (100 - rain.concordancePct) * 0.25;
+
+  let score = 100 - tempPenalty - rainPenalty;
   score = Math.max(30, Math.min(99, Math.round(score)));
 
   let overallReliability: 'Alta' | 'Media' | 'Bassa' = 'Alta';
   let dotColorClass = 'bg-emerald-400';
 
-  if (score < 65 || temperature.spread > 2.5) {
+  if (score < 58 || temperature.spread > 2.5) {
     overallReliability = 'Bassa';
     dotColorClass = 'bg-orange-400';
-  } else if (score < 82 || temperature.spread > 1.4) {
+  } else if (score < 78 || temperature.spread > 1.5) {
     overallReliability = 'Media';
     dotColorClass = 'bg-yellow-400';
   }

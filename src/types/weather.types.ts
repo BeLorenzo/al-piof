@@ -52,6 +52,8 @@ export interface DayModelComparison {
   overallReliability: 'Alta' | 'Media' | 'Bassa';
   overallScore: number;
   colorClass: string;
+  leadTimeHorizon: string;
+  leadTimeFactor: number;
 }
 
 export interface HourlyModelComparison {

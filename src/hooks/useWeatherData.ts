@@ -256,7 +256,7 @@ function normalizeWeatherData(
         },
       ];
 
-      dayComparison = calculateDayModelComparison(maxItems, minItems, rainItems);
+      dayComparison = calculateDayModelComparison(maxItems, minItems, rainItems, d);
     }
 
     daily.push({

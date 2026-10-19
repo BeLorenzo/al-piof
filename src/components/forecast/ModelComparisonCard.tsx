@@ -61,8 +61,13 @@ export const ModelComparisonCard: React.FC<ModelComparisonCardProps> = ({
                 {overallReliability} ({overallScore}%)
               </span>
             </div>
-            <div className="text-[11px] text-slate-400 mt-0.5">
-              Confronto MeteoSwiss, ECMWF e ICON-D2 per {dayName}
+            <div className="text-[11px] text-slate-400 mt-0.5 flex items-center gap-1.5 flex-wrap">
+              <span>Confronto MeteoSwiss, ECMWF e ICON-D2 per {dayName}</span>
+              {comparison.leadTimeHorizon && (
+                <span className="text-[10px] text-sky-400 font-medium">
+                  &bull; {comparison.leadTimeHorizon}
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -81,7 +86,13 @@ export const ModelComparisonCard: React.FC<ModelComparisonCardProps> = ({
 
       {/* Expanded Comparison Breakdown */}
       {isExpanded && (
-        <div className="px-3 pb-3 pt-1 border-t border-slate-800/60 space-y-2.5 text-xs animate-fade-in bg-slate-950/40">
+        <div className="px-3 pb-3 pt-2 border-t border-slate-800/60 space-y-2.5 text-xs animate-fade-in bg-slate-950/40">
+          {/* Horizon info note */}
+          <div className="px-3 py-1.5 rounded-xl bg-slate-900/80 border border-slate-800/80 flex items-center justify-between text-[11px]">
+            <span className="text-slate-400">Orizzonte temporale:</span>
+            <span className="font-semibold text-sky-300">{comparison.leadTimeHorizon}</span>
+          </div>
+
           {/* 1. Temp Max Comparison */}
           <div className="p-2.5 rounded-xl bg-slate-900/60 border border-slate-800/70">
             <div className="flex items-center justify-between mb-1.5">
