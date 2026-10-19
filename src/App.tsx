@@ -21,7 +21,7 @@ export default function App() {
             <CloudRain className="w-7 h-7 text-sky-400" />
             <div>
               <h1 className="text-xl font-bold tracking-tight text-white">Al piöf</h1>
-              <p className="text-xs text-slate-400">Previsioni Meteo ad Alta Precisione</p>
+              <p className="text-xs text-slate-400">Previsioni ad Alta Risoluzione · Nord Italia & Alpi</p>
             </div>
           </div>
           <span className="text-xs px-2.5 py-1 bg-sky-950/70 border border-sky-800/60 text-sky-300 rounded-full font-medium">

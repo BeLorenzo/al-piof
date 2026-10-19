@@ -37,13 +37,13 @@ export const DEFAULT_FAVORITES: Location[] = [
     elevation: 273,
   },
   {
-    id: '41.8919_12.5113_Roma',
-    name: 'Roma',
-    admin1: 'Lazio',
+    id: '45.6983_9.6773_Bergamo',
+    name: 'Bergamo',
+    admin1: 'Lombardia',
     country: 'Italia',
-    latitude: 41.8919,
-    longitude: 12.5113,
-    elevation: 21,
+    latitude: 45.6983,
+    longitude: 9.6773,
+    elevation: 249,
   },
 ];
 
