@@ -44,7 +44,7 @@ export const RadarSection: React.FC<RadarSectionProps> = ({
           <WindyRadarEmbed
             location={location}
             heightClass={isPreview ? 'h-[240px]' : 'h-[520px]'}
-            mode="rain"
+            defaultLayer="rain"
           />
         </div>
 
