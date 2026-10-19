@@ -131,24 +131,26 @@ export const TopBar: React.FC<TopBarProps> = ({ onOpenSearch }) => {
       </div>
 
       {/* Horizontal scrolling favorites pills */}
-      <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1.5">
-        {favorites.map((fav: Location) => {
-          const active = fav.id === selectedLocation.id;
-          return (
-            <button
-              key={fav.id}
-              onClick={() => setSelectedLocation(fav)}
-              className={`shrink-0 text-xs px-2.5 py-1 rounded-full border transition-all ${
-                active
-                  ? 'bg-sky-500/20 border-sky-500/60 text-sky-200 font-medium shadow-sm shadow-sky-950'
-                  : 'bg-slate-900/60 border-slate-800/80 text-slate-400 hover:text-slate-200 hover:border-slate-700'
-              }`}
-            >
-              {fav.name}
-            </button>
-          );
-        })}
-      </div>
+      {favorites.length > 0 && (
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1.5">
+          {favorites.map((fav: Location) => {
+            const active = fav.id === selectedLocation.id;
+            return (
+              <button
+                key={fav.id}
+                onClick={() => setSelectedLocation(fav)}
+                className={`shrink-0 text-xs px-2.5 py-1 rounded-full border transition-all ${
+                  active
+                    ? 'bg-sky-500/20 border-sky-500/60 text-sky-200 font-medium shadow-sm shadow-sky-950'
+                    : 'bg-slate-900/60 border-slate-800/80 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                }`}
+              >
+                {fav.name}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {/* Main View Mode Selector */}
       <div className="grid grid-cols-3 gap-1 bg-slate-900/90 p-1 rounded-xl border border-slate-800/90 mt-1">

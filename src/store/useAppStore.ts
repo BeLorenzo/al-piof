@@ -7,53 +7,19 @@ import type {
 } from '../types/weather.types';
 
 export const DEFAULT_FALLBACK_LOCATION: Location = {
-  id: '45.7058_9.4975_Sotto il Monte Giovanni XXIII',
-  name: 'Sotto il Monte Giovanni XXIII',
+  id: '45.4642_9.1900_Milano',
+  name: 'Milano',
   admin1: 'Lombardia',
-  admin2: 'Bergamo',
+  admin2: 'Milano',
   country: 'Italia',
-  latitude: 45.7058,
-  longitude: 9.4975,
-  elevation: 291,
-  population: 4388,
+  latitude: 45.4642,
+  longitude: 9.19,
+  elevation: 120,
+  population: 1395274,
 };
 
-export const DEFAULT_FAVORITES: Location[] = [
-  DEFAULT_FALLBACK_LOCATION,
-  {
-    id: '45.4642_9.1900_Milano',
-    name: 'Milano',
-    admin1: 'Lombardia',
-    admin2: 'Milano',
-    country: 'Italia',
-    latitude: 45.4642,
-    longitude: 9.19,
-    elevation: 120,
-    population: 1395274,
-  },
-  {
-    id: '46.0037_8.9511_Lugano',
-    name: 'Lugano',
-    admin1: 'Ticino',
-    admin2: 'Lugano',
-    country: 'Svizzera',
-    latitude: 46.0037,
-    longitude: 8.9511,
-    elevation: 273,
-    population: 62615,
-  },
-  {
-    id: '45.6983_9.6773_Bergamo',
-    name: 'Bergamo',
-    admin1: 'Lombardia',
-    admin2: 'Bergamo',
-    country: 'Italia',
-    latitude: 45.6983,
-    longitude: 9.6773,
-    elevation: 249,
-    population: 120287,
-  },
-];
+// Nessun dato personale cablato nel repo: i preferiti partono vuoti e si salvano nel localStorage
+export const DEFAULT_FAVORITES: Location[] = [];
 
 interface AppState {
   selectedLocation: Location;
@@ -89,9 +55,8 @@ export const useAppStore = create<AppState>()(
         const { favorites } = get();
         const exists = favorites.some((f) => f.id === loc.id);
         if (exists) {
-          const next = favorites.filter((f) => f.id !== loc.id);
           set({
-            favorites: next.length > 0 ? next : [DEFAULT_FALLBACK_LOCATION],
+            favorites: favorites.filter((f) => f.id !== loc.id),
           });
         } else {
           set({ favorites: [...favorites, loc] });
