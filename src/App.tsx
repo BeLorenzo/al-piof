@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useAppStore } from './store/useAppStore';
 import { useWeatherData } from './hooks/useWeatherData';
 import { TopBar } from './components/layout/TopBar';
+import { RefreshStatusBar } from './components/layout/RefreshStatusBar';
 import { SearchModal } from './components/search/SearchModal';
 import { DaySelector } from './components/forecast/DaySelector';
 import { HeroSummary } from './components/hero/HeroSummary';
@@ -10,15 +11,16 @@ import { AirQualityModal } from './components/hero/AirQualityModal';
 import { HourScrubber } from './components/forecast/HourScrubber';
 import { HourlyVerticalList } from './components/forecast/HourlyVerticalList';
 import { HourlyChart } from './components/forecast/HourlyChart';
+import { RadarSection } from './components/radar/RadarSection';
 import { HistoricalComparisonCard } from './components/forecast/HistoricalComparisonCard';
-import { Loader2, AlertTriangle, Radar } from 'lucide-react';
+import { Loader2, AlertTriangle } from 'lucide-react';
 
 export default function App() {
-  const { selectedLocation, selectedModel, selectedDayIndex, viewMode } = useAppStore();
+  const { selectedLocation, selectedModel, selectedDayIndex, viewMode, setViewMode } = useAppStore();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isAirQualityOpen, setIsAirQualityOpen] = useState(false);
 
-  const { data, isLoading, isError, error, refetch } = useWeatherData(
+  const { data, isLoading, isFetching, isError, error, refetch } = useWeatherData(
     selectedLocation,
     selectedModel
   );
@@ -30,6 +32,13 @@ export default function App() {
       <div className="w-full max-w-md bg-slate-950 flex flex-col min-h-screen border-x border-slate-900 shadow-2xl relative">
         {/* Navigation & Controls */}
         <TopBar onOpenSearch={() => setIsSearchOpen(true)} />
+
+        {/* Refresh & Offline Status Bar */}
+        <RefreshStatusBar
+          updatedAt={data?.updatedAt}
+          isFetching={isFetching}
+          onRefresh={() => refetch()}
+        />
 
         {/* Search Modal */}
         <SearchModal
@@ -105,14 +114,11 @@ export default function App() {
             )}
 
             {viewMode === 'radar' && (
-              <div className="p-8 text-center space-y-3 bg-slate-900/40 border-y border-slate-800/80 my-4">
-                <Radar className="w-10 h-10 text-sky-400 mx-auto animate-pulse" />
-                <div className="text-sm font-bold text-white">
-                  Radar Precipitazioni DPC &amp; Windy
-                </div>
-                <div className="text-xs text-slate-400 max-w-xs mx-auto">
-                  La sezione radar dual-engine interattiva sarà collegata nello Step 6 (Fase 3).
-                </div>
+              <div className="py-2 animate-fade-in">
+                <RadarSection
+                  location={selectedLocation}
+                  isPreview={false}
+                />
               </div>
             )}
 
@@ -123,6 +129,20 @@ export default function App() {
               selectedDate={currentDay.date}
               currentTempMax={currentDay.tempMax}
             />
+
+            {/* Radar Preview at the bottom of the Home view (with anti scroll-trap) */}
+            {viewMode !== 'radar' && (
+              <div className="mt-4 border-t border-slate-900 pt-2">
+                <RadarSection
+                  location={selectedLocation}
+                  isPreview={true}
+                  onExpand={() => {
+                    setViewMode('radar');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                />
+              </div>
+            )}
           </main>
         )}
       </div>
