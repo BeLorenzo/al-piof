@@ -22,21 +22,25 @@ export const WindyRadarEmbed: React.FC<WindyRadarEmbedProps> = ({
   const product = mode === 'radar' ? 'radar' : 'ecmwf';
   const zoom = mode === 'radar' ? 9 : 8;
 
-  const windyUrl = `https://embed.windy.com/embed2.html?lat=${latitude}&lon=${longitude}&detailLat=${latitude}&detailLon=${longitude}&zoom=${zoom}&level=surface&overlay=${overlay}&product=${product}&menu=&message=&marker=true&calendar=now&type=map&location=coordinates&detail=&metricRain=mm&metricTemp=°C&metricWind=km/h`;
+  // URL pulito: rimosso 'detail=' per impedire l'apertura del pannello mini-meteo
+  const windyUrl = `https://embed.windy.com/embed2.html?lat=${latitude}&lon=${longitude}&zoom=${zoom}&level=surface&overlay=${overlay}&product=${product}&menu=&message=&calendar=now&type=map&location=coordinates&metricRain=mm&metricTemp=°C&metricWind=km/h`;
 
   return (
     <div className={`w-full ${heightClass} relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-950 shadow-xl`}>
-      {/* Floating location indicator badge */}
-      <div className="absolute top-2.5 left-2.5 z-10 pointer-events-none flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-950/85 backdrop-blur-md border border-slate-700/80 text-[11px] font-semibold text-slate-100 shadow-lg">
-        <span className="relative flex h-2 w-2">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
-          <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500" />
-        </span>
-        <span>{location.name}</span>
+      {/* Puntino centrale elegante sul paese (non cliccabile, zero popup fastidiosi) */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-10 flex flex-col items-center">
+        <div className="px-2 py-0.5 rounded-full bg-slate-950/90 border border-slate-700/80 text-[10px] font-bold text-slate-100 shadow-md mb-1 whitespace-nowrap flex items-center gap-1 backdrop-blur-md">
+          <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+          <span>{location.name}</span>
+        </div>
+        <div className="relative flex items-center justify-center">
+          <span className="animate-ping absolute inline-flex h-4 w-4 rounded-full bg-rose-400 opacity-75" />
+          <span className="relative inline-flex rounded-full h-3 w-3 bg-rose-500 border-2 border-white shadow-lg" />
+        </div>
       </div>
 
       <iframe
-        title={`Mappa Windy - ${mode === 'rain' ? 'Previsione Pioggia' : 'Radar Live'} - ${location.name}`}
+        title={`Mappa Windy - ${location.name}`}
         src={windyUrl}
         className="w-full h-full border-0 rounded-2xl"
         loading="lazy"
