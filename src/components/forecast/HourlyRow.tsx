@@ -8,10 +8,13 @@ import {
   Wind,
   Sun,
   Sparkles,
+  ShieldCheck,
+  Thermometer,
 } from 'lucide-react';
 import { getWmoInfo } from '../../utils/wmoCodes';
 import { getWindArrowStyle, getWindDirection } from '../../utils/windUtils';
 import { getEaqiInfo } from '../../utils/aqiScale';
+import { getUvInfo } from '../../utils/meteoMath';
 import type { HourlyRowData } from '../../types/weather.types';
 
 interface HourlyRowProps {
@@ -33,6 +36,7 @@ export const HourlyRow: React.FC<HourlyRowProps> = ({
   const WmoIcon = wmo.icon;
   const windDir = getWindDirection(row.windDirection);
   const aqiInfo = getEaqiInfo(row.europeanAqi);
+  const uvInfo = getUvInfo(row.uvIndex);
 
   return (
     <div
@@ -48,16 +52,22 @@ export const HourlyRow: React.FC<HourlyRowProps> = ({
       {/* 5-Column Compact Row */}
       <div
         onClick={onToggle}
-        className="grid grid-cols-[54px_1fr_64px_68px_60px_20px] items-center px-3 py-2.5 cursor-pointer select-none text-xs gap-1"
+        className="grid grid-cols-[56px_1fr_64px_68px_60px_20px] items-center px-3 py-2.5 cursor-pointer select-none text-xs gap-1"
       >
-        {/* Col 1: Ora */}
-        <div>
-          <div className="font-bold text-slate-100">{row.hour}</div>
-          {isCurrentHour && (
-            <span className="text-[9px] px-1 py-0.2 rounded bg-sky-500/20 text-sky-300 font-semibold leading-none">
-              ORA
-            </span>
-          )}
+        {/* Col 1: Ora + Pallino Affidabilità */}
+        <div className="flex items-center gap-1.5">
+          <span
+            className={`w-1.5 h-1.5 rounded-full shrink-0 ${row.reliability.dotColorClass}`}
+            title={`Affidabilità: ${row.reliability.label} (${row.reliability.score}%)`}
+          />
+          <div>
+            <div className="font-bold text-slate-100">{row.hour}</div>
+            {isCurrentHour && (
+              <span className="text-[9px] px-1 py-0.2 rounded bg-sky-500/20 text-sky-300 font-semibold leading-none">
+                ORA
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Col 2: Icona + Condizione */}
@@ -115,7 +125,7 @@ export const HourlyRow: React.FC<HourlyRowProps> = ({
 
       {/* Accordion Expanded Detail */}
       {isExpanded && (
-        <div className="px-3 pb-3 pt-1 grid grid-cols-3 gap-2 bg-slate-950/50 text-[11px] border-t border-slate-800/40 animate-fade-in">
+        <div className="px-3 pb-3 pt-1 grid grid-cols-3 gap-2 bg-slate-950/60 text-[11px] border-t border-slate-800/40 animate-fade-in">
           <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800">
             <div className="flex items-center gap-1 text-slate-400 text-[10px]">
               <Mountain className="w-3 h-3 text-sky-400" />
@@ -123,6 +133,16 @@ export const HourlyRow: React.FC<HourlyRowProps> = ({
             </div>
             <div className="font-bold text-slate-200 mt-0.5">
               {row.freezingLevel} m
+            </div>
+          </div>
+
+          <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800">
+            <div className="flex items-center gap-1 text-slate-400 text-[10px]">
+              <Thermometer className="w-3 h-3 text-cyan-400" />
+              <span>P. Rugiada</span>
+            </div>
+            <div className="font-bold text-slate-200 mt-0.5">
+              {row.dewPoint}°C
             </div>
           </div>
 
@@ -162,7 +182,7 @@ export const HourlyRow: React.FC<HourlyRowProps> = ({
               <span>Indice UV</span>
             </div>
             <div className="font-bold text-slate-200 mt-0.5">
-              {row.uvIndex}
+              {uvInfo.ratioText} ({uvInfo.label})
             </div>
           </div>
 
@@ -173,6 +193,16 @@ export const HourlyRow: React.FC<HourlyRowProps> = ({
             </div>
             <div className={`font-bold mt-0.5 ${aqiInfo.colorClass}`}>
               {row.europeanAqi !== null ? `${row.europeanAqi} (${aqiInfo.label})` : 'N/D'}
+            </div>
+          </div>
+
+          <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800 col-span-2">
+            <div className="flex items-center gap-1 text-slate-400 text-[10px]">
+              <ShieldCheck className="w-3 h-3 text-sky-400" />
+              <span>Affidabilità Modelli ({row.reliability.score}%)</span>
+            </div>
+            <div className="font-semibold text-slate-300 mt-0.5">
+              Spread: {row.reliability.minTemp}° &rarr; {row.reliability.maxTemp}° (Δ {row.reliability.tempSpread}°C)
             </div>
           </div>
         </div>

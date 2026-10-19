@@ -10,6 +10,7 @@ import { AirQualityModal } from './components/hero/AirQualityModal';
 import { HourScrubber } from './components/forecast/HourScrubber';
 import { HourlyVerticalList } from './components/forecast/HourlyVerticalList';
 import { HourlyChart } from './components/forecast/HourlyChart';
+import { HistoricalComparisonCard } from './components/forecast/HistoricalComparisonCard';
 import { Loader2, AlertTriangle, Radar } from 'lucide-react';
 
 export default function App() {
@@ -114,6 +115,14 @@ export default function App() {
                 </div>
               </div>
             )}
+
+            {/* Historical Almanac (past 5 years) */}
+            <HistoricalComparisonCard
+              latitude={selectedLocation.latitude}
+              longitude={selectedLocation.longitude}
+              selectedDate={currentDay.date}
+              currentTempMax={currentDay.tempMax}
+            />
           </main>
         )}
       </div>

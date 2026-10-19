@@ -1,4 +1,5 @@
 export type WeatherModel =
+  | 'ensemble'
   | 'best_match'
   | 'meteoswiss_icon_ch2'
   | 'ecmwf_ifs025'
@@ -14,11 +15,29 @@ export interface Location {
   id: string;
   name: string;
   country?: string;
-  admin1?: string;
+  admin1?: string; // Regione
+  admin2?: string; // Provincia
+  population?: number;
   latitude: number;
   longitude: number;
   elevation?: number;
   isCurrentLocation?: boolean;
+}
+
+export type ReliabilityRating = 'high' | 'medium' | 'low';
+
+export interface ReliabilityInfo {
+  rating: ReliabilityRating;
+  score: number; // 0-100%
+  label: string; // "Alta", "Media", "Bassa"
+  colorClass: string;
+  bgClass: string;
+  dotColorClass: string;
+  tempSpread: number; // ΔT tra modelli (°C)
+  tempStdDev: number;
+  minTemp: number;
+  maxTemp: number;
+  rainConcordance: number; // 0-1
 }
 
 // --- Raw Open-Meteo Forecast Response ---
@@ -41,6 +60,7 @@ export interface OpenMeteoForecastResponse {
     wind_speed_10m: number;
     wind_direction_10m: number;
     wind_gusts_10m: number;
+    dew_point_2m?: number;
   };
   minutely_15?: {
     time: string[];
@@ -61,6 +81,9 @@ export interface OpenMeteoForecastResponse {
     freezing_level_height: number[];
     relative_humidity_2m: number[];
     visibility: number[];
+    dew_point_2m?: number[];
+    surface_pressure?: number[];
+    [key: string]: any; // Allows dynamic multi-model suffixes like temperature_2m_best_match
   };
   daily: {
     time: string[];
@@ -76,6 +99,7 @@ export interface OpenMeteoForecastResponse {
     precipitation_probability_max: number[];
     wind_speed_10m_max: number[];
     wind_gusts_10m_max: number[];
+    [key: string]: any;
   };
 }
 
@@ -116,6 +140,7 @@ export interface GeocodingResult {
   country?: string;
   admin1?: string;
   admin2?: string;
+  population?: number;
 }
 
 export interface GeocodingResponse {
@@ -138,6 +163,7 @@ export interface HourlyRowData {
   timestamp: number;
   temperature: number;
   apparentTemperature: number;
+  dewPoint: number;
   weatherCode: number;
   precipitationProbability: number;
   precipitation: number;
@@ -145,13 +171,25 @@ export interface HourlyRowData {
   windDirection: number;
   windGusts: number;
   uvIndex: number;
+  uvIndexLabel: string; // e.g. "Basso", "Moderato"
   freezingLevel: number;
   relativeHumidity: number;
   visibility: number;
   cloudCover: number;
+  surfacePressure: number;
   europeanAqi: number | null;
   pm10: number | null;
   pm25: number | null;
+  reliability: ReliabilityInfo;
+}
+
+export interface MoonInfo {
+  phaseName: string; // e.g. "Luna Piena"
+  phaseIcon: string;
+  fraction: number; // 0 - 1
+  illuminationPct: number; // 0 - 100%
+  moonrise: string; // "21:30" or "--:--"
+  moonset: string; // "07:15" or "--:--"
 }
 
 export interface DailyForecastData {
@@ -164,13 +202,21 @@ export interface DailyForecastData {
   tempMin: number;
   apparentTempMax: number;
   apparentTempMin: number;
+  dewPointMax: number;
+  dewPointMin: number;
   sunrise: string;
   sunset: string;
+  moon: MoonInfo;
   uvIndexMax: number;
+  uvIndexLabel: string;
   precipitationSum: number;
   precipitationProbabilityMax: number;
   windSpeedMax: number;
   windGustsMax: number;
+  pressureAvg: number;
+  pressureTrend: 'rising' | 'falling' | 'steady';
+  reliability: ReliabilityInfo;
+  summaryText: string;
   hourly: HourlyRowData[]; // 24 hours for this day
 }
 
@@ -178,16 +224,20 @@ export interface CurrentWeatherData {
   time: string;
   temperature: number;
   apparentTemperature: number;
+  dewPoint: number;
+  dewPointComfort: string; // e.g. "Gradevole", "Secco", "Afoso"
   weatherCode: number;
   isDay: boolean;
   precipitation: number;
   cloudCover: number;
   surfacePressure: number;
+  pressureTrend: 'rising' | 'falling' | 'steady';
   windSpeed: number;
   windDirection: number;
   windGusts: number;
   relativeHumidity: number;
   freezingLevel: number;
+  reliability: ReliabilityInfo;
 }
 
 export type EaqiLevel =
@@ -222,6 +272,25 @@ export interface Minutely15Slot {
   time: string;
   timeLabel: string; // "14:15"
   precipitation: number;
+}
+
+export interface HistoricalYearRecord {
+  year: number;
+  yearsAgo: number;
+  date: string;
+  tempMax: number;
+  tempMin: number;
+  precipitation: number;
+  weatherCode: number;
+}
+
+export interface HistoricalAlmanacData {
+  referenceDate: string;
+  avgTempMax: number;
+  avgTempMin: number;
+  currentTempMax: number;
+  tempMaxAnomaly: number; // e.g. +1.8
+  records: HistoricalYearRecord[];
 }
 
 export interface NormalizedWeatherData {

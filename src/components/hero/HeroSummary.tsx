@@ -1,17 +1,22 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Wind,
   Droplets,
   Sun,
   Sunrise,
   Sunset,
-  Mountain,
   Gauge,
   Sparkles,
   ArrowUp,
+  TrendingUp,
+  TrendingDown,
+  Minus,
+  ShieldCheck,
+  Info,
 } from 'lucide-react';
 import { getWmoInfo } from '../../utils/wmoCodes';
 import { getWindDirection, getWindArrowStyle } from '../../utils/windUtils';
+import { getUvInfo, getDewPointComfort } from '../../utils/meteoMath';
 import type { NormalizedWeatherData } from '../../types/weather.types';
 
 interface HeroSummaryProps {
@@ -25,6 +30,7 @@ export const HeroSummary: React.FC<HeroSummaryProps> = ({
   selectedDayIndex,
   onOpenAirQuality,
 }) => {
+  const [showSpreadInfo, setShowSpreadInfo] = useState(false);
   const isToday = selectedDayIndex === 0;
   const currentDay = data.daily[selectedDayIndex] || data.daily[0];
 
@@ -34,13 +40,31 @@ export const HeroSummary: React.FC<HeroSummaryProps> = ({
 
   const windDir = isToday
     ? getWindDirection(data.current.windDirection)
-    : 'N/D';
-  const windAngle = isToday ? data.current.windDirection : 0;
+    : getWindDirection(currentDay.hourly[12]?.windDirection ?? 0);
+  const windAngle = isToday
+    ? data.current.windDirection
+    : currentDay.hourly[12]?.windDirection ?? 0;
+
+  const reliability = isToday
+    ? data.current.reliability
+    : currentDay.reliability;
+
+  const uvInfo = getUvInfo(currentDay.uvIndexMax);
+  const dewPointVal = isToday ? data.current.dewPoint : currentDay.dewPointMax;
+  const dewComfort = getDewPointComfort(dewPointVal);
+
+  const pressureTrend = isToday ? data.current.pressureTrend : currentDay.pressureTrend;
 
   return (
-    <div className="px-4 py-3 space-y-3">
+    <div className="px-4 py-2 space-y-2.5">
+      {/* Dynamic Smart Text Summary */}
+      <div className="p-2.5 rounded-2xl bg-sky-950/40 border border-sky-800/50 text-xs text-sky-200 flex items-start gap-2 shadow-sm">
+        <Sparkles className="w-4 h-4 text-sky-400 shrink-0 mt-0.5" />
+        <span className="leading-snug">{currentDay.summaryText}</span>
+      </div>
+
       {/* Main Hero Card */}
-      <div className="relative overflow-hidden bg-gradient-to-b from-slate-900/90 to-slate-900/60 border border-slate-800/90 rounded-3xl p-5 shadow-2xl backdrop-blur-md">
+      <div className="relative overflow-hidden bg-gradient-to-b from-slate-900/90 to-slate-900/60 border border-slate-800/90 rounded-3xl p-4 shadow-2xl backdrop-blur-md">
         <div className="flex items-center justify-between gap-3">
           <div>
             <div className="flex items-center gap-1.5 text-xs text-sky-400 font-medium mb-1">
@@ -66,19 +90,55 @@ export const HeroSummary: React.FC<HeroSummaryProps> = ({
                 )}
               </div>
             </div>
-            <div className="mt-2 text-sm font-semibold text-slate-200">
+            <div className="mt-1.5 text-sm font-semibold text-slate-200">
               {wmo.label}
             </div>
           </div>
 
           <div className="p-3 rounded-2xl bg-slate-950/40 border border-slate-800/80">
-            <WmoIcon className={`w-14 h-14 ${wmo.colorClass}`} />
+            <WmoIcon className={`w-12 h-12 ${wmo.colorClass}`} />
           </div>
         </div>
+
+        {/* Reliability Score Badge with toggleable spread info */}
+        <div className="mt-3 pt-2.5 border-t border-slate-800/80 flex items-center justify-between text-xs">
+          <div className="flex items-center gap-1.5">
+            <ShieldCheck className="w-4 h-4 text-sky-400" />
+            <span className="text-slate-400">Affidabilità Modelli:</span>
+            <span className={`font-bold ${reliability.colorClass}`}>
+              {reliability.label} ({reliability.score}%)
+            </span>
+          </div>
+
+          <button
+            onClick={() => setShowSpreadInfo((p) => !p)}
+            className="flex items-center gap-1 text-[11px] text-sky-400 hover:text-sky-300 font-medium"
+          >
+            <Info className="w-3.5 h-3.5" />
+            <span>Spread</span>
+          </button>
+        </div>
+
+        {showSpreadInfo && (
+          <div className="mt-2 p-2 rounded-xl bg-slate-950/80 border border-slate-800 text-[11px] text-slate-300 space-y-1 animate-fade-in">
+            <div className="flex justify-between">
+              <span className="text-slate-400">Forchetta min-max modelli:</span>
+              <span className="font-semibold text-white">
+                {reliability.minTemp}°C &rarr; {reliability.maxTemp}°C (Δ {reliability.tempSpread}°C)
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-slate-400">Concordanza pioggia:</span>
+              <span className="font-semibold text-cyan-300">
+                {Math.round(reliability.rainConcordance * 100)}%
+              </span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Bento Grid (2x3) */}
-      <div className="grid grid-cols-2 gap-2.5">
+      <div className="grid grid-cols-2 gap-2">
         {/* 1. Qualità dell'Aria */}
         <button
           onClick={onOpenAirQuality}
@@ -107,18 +167,30 @@ export const HeroSummary: React.FC<HeroSummaryProps> = ({
           )}
         </button>
 
-        {/* 2. Zero Termico & Pressione */}
+        {/* 2. Pressione & Punto di Rugiada */}
         <div className="p-3 bg-slate-900/70 border border-slate-800/90 rounded-2xl">
           <div className="flex items-center justify-between text-slate-400 mb-1">
-            <span className="text-[11px] font-medium">Zero Termico</span>
-            <Mountain className="w-3.5 h-3.5 text-sky-400" />
+            <span className="text-[11px] font-medium">Pressione &amp; Rugiada</span>
+            <Gauge className="w-3.5 h-3.5 text-sky-400" />
           </div>
-          <div className="text-base font-bold text-white">
-            {data.current.freezingLevel} <span className="text-xs font-normal text-slate-400">m</span>
+          <div className="flex items-center gap-1.5 text-base font-bold text-white">
+            <span>{isToday ? data.current.surfacePressure : currentDay.pressureAvg} hPa</span>
+            {pressureTrend === 'rising' ? (
+              <span title="In aumento">
+                <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
+              </span>
+            ) : pressureTrend === 'falling' ? (
+              <span title="In calo">
+                <TrendingDown className="w-3.5 h-3.5 text-rose-400" />
+              </span>
+            ) : (
+              <span title="Stabile">
+                <Minus className="w-3.5 h-3.5 text-slate-400" />
+              </span>
+            )}
           </div>
-          <div className="flex items-center gap-1 text-[11px] text-slate-400 mt-0.5">
-            <Gauge className="w-3 h-3 text-slate-500" />
-            <span>{data.current.surfacePressure} hPa</span>
+          <div className="text-[11px] text-slate-400 mt-0.5 truncate">
+            Rugiada {dewPointVal}° • <span className={`font-medium ${dewComfort.colorClass}`}>{dewComfort.label}</span>
           </div>
         </div>
 
@@ -136,8 +208,8 @@ export const HeroSummary: React.FC<HeroSummaryProps> = ({
               {isToday ? `${data.current.windSpeed} km/h` : `${currentDay.windSpeedMax} km/h`}
             </span>
           </div>
-          <div className="text-[11px] text-slate-400 mt-0.5">
-            {isToday ? `${windDir} • Raffica ${data.current.windGusts} km/h` : `Raffica max ${currentDay.windGustsMax} km/h`}
+          <div className="text-[11px] text-slate-400 mt-0.5 truncate">
+            {isToday ? `${windDir} • Raffica ${data.current.windGusts} km/h` : `Raffica ${currentDay.windGustsMax} km/h`}
           </div>
         </div>
 
@@ -148,36 +220,47 @@ export const HeroSummary: React.FC<HeroSummaryProps> = ({
             <Droplets className="w-3.5 h-3.5 text-blue-400" />
           </div>
           <div className="text-base font-bold text-white">
-            {data.current.relativeHumidity}%
+            {isToday ? `${data.current.relativeHumidity}%` : `${currentDay.hourly[12]?.relativeHumidity ?? 60}%`}
           </div>
           <div className="w-full bg-slate-800 h-1.5 rounded-full mt-2 overflow-hidden">
             <div
               className="bg-blue-400 h-full rounded-full"
-              style={{ width: `${data.current.relativeHumidity}%` }}
+              style={{
+                width: `${isToday ? data.current.relativeHumidity : currentDay.hourly[12]?.relativeHumidity ?? 60}%`,
+              }}
             />
           </div>
         </div>
 
-        {/* 5. Indice UV */}
+        {/* 5. Indice UV su scala /11 OMS */}
         <div className="p-3 bg-slate-900/70 border border-slate-800/90 rounded-2xl">
           <div className="flex items-center justify-between text-slate-400 mb-1">
             <span className="text-[11px] font-medium">Indice UV Max</span>
             <Sun className="w-3.5 h-3.5 text-amber-400" />
           </div>
           <div className="text-base font-bold text-white">
-            {currentDay.uvIndexMax}
+            {uvInfo.ratioText}
           </div>
-          <div className="text-[11px] text-slate-400 mt-0.5">
-            {currentDay.uvIndexMax <= 2 ? 'Basso' : currentDay.uvIndexMax <= 5 ? 'Moderato' : 'Forte'}
+          <div className="w-full bg-slate-800 h-1.5 rounded-full mt-1.5 overflow-hidden">
+            <div
+              className={`h-full rounded-full ${uvInfo.bgClass}`}
+              style={{ width: `${uvInfo.progressPct}%` }}
+            />
+          </div>
+          <div className={`text-[10px] font-semibold mt-1 ${uvInfo.colorClass}`}>
+            {uvInfo.label}
           </div>
         </div>
 
-        {/* 6. Alba & Tramonto */}
+        {/* 6. Sole & Luna */}
         <div className="p-3 bg-slate-900/70 border border-slate-800/90 rounded-2xl">
-          <div className="text-[11px] font-medium text-slate-400 mb-1">
-            Alba &amp; Tramonto
+          <div className="flex items-center justify-between text-[11px] text-slate-400 mb-1">
+            <span className="font-medium">Sole &amp; Luna</span>
+            <span className="text-xs" title={currentDay.moon.phaseName}>
+              {currentDay.moon.phaseIcon}
+            </span>
           </div>
-          <div className="flex items-center justify-between text-xs font-semibold text-slate-100 mt-1">
+          <div className="flex items-center justify-between text-xs font-semibold text-slate-100">
             <div className="flex items-center gap-1">
               <Sunrise className="w-3.5 h-3.5 text-amber-300" />
               <span>{currentDay.sunrise}</span>
@@ -186,6 +269,12 @@ export const HeroSummary: React.FC<HeroSummaryProps> = ({
               <Sunset className="w-3.5 h-3.5 text-orange-400" />
               <span>{currentDay.sunset}</span>
             </div>
+          </div>
+          <div className="flex items-center justify-between text-[10px] text-slate-400 mt-1">
+            <span>{currentDay.moon.phaseName}</span>
+            <span className="text-slate-300 font-medium">
+              {currentDay.moon.illuminationPct}% luce
+            </span>
           </div>
         </div>
       </div>

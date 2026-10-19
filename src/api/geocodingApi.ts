@@ -31,6 +31,8 @@ export async function searchLocations(query: string): Promise<Location[]> {
     name: item.name,
     country: item.country,
     admin1: item.admin1,
+    admin2: item.admin2,
+    population: item.population,
     latitude: item.latitude,
     longitude: item.longitude,
     elevation: item.elevation,

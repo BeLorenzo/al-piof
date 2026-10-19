@@ -19,6 +19,7 @@ interface TopBarProps {
 }
 
 const MODELS: { id: WeatherModel; label: string }[] = [
+  { id: 'ensemble', label: 'Media Ensemble ⭐' },
   { id: 'best_match', label: 'Auto (Blend)' },
   { id: 'meteoswiss_icon_ch2', label: 'MeteoSwiss' },
   { id: 'ecmwf_ifs025', label: 'ECMWF' },
@@ -87,8 +88,9 @@ export const TopBar: React.FC<TopBarProps> = ({ onOpenSearch }) => {
               {selectedLocation.name}
             </div>
             <div className="text-[10px] text-slate-400 truncate">
-              {selectedLocation.admin1 || selectedLocation.country || ''}
-              {selectedLocation.elevation ? ` • ${selectedLocation.elevation} m s.l.m.` : ''}
+              {selectedLocation.elevation ? `${selectedLocation.elevation} m s.l.m.` : ''}
+              {selectedLocation.population ? ` • ${selectedLocation.population.toLocaleString('it-IT')} ab.` : ''}
+              {selectedLocation.admin2 ? ` • Prov. ${selectedLocation.admin2}` : selectedLocation.admin1 ? ` • ${selectedLocation.admin1}` : ''}
             </div>
           </div>
         </button>

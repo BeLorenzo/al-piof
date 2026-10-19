@@ -156,9 +156,9 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
                       {loc.name}
                     </div>
                     <div className="text-[11px] text-slate-400 truncate">
-                      {loc.admin1 ? `${loc.admin1}, ` : ''}
-                      {loc.country || ''}
-                      {loc.elevation ? ` • ${loc.elevation} m` : ''}
+                      {loc.elevation ? `${loc.elevation} m s.l.m.` : ''}
+                      {loc.population ? ` • ${loc.population.toLocaleString('it-IT')} ab.` : ''}
+                      {loc.admin2 ? ` • Prov. ${loc.admin2}` : loc.admin1 ? ` • ${loc.admin1}` : ''}
                     </div>
                   </div>
                 </button>

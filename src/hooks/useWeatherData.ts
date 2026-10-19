@@ -4,6 +4,15 @@ import { it } from 'date-fns/locale';
 import { fetchForecast } from '../api/weatherApi';
 import { fetchAirQuality } from '../api/airQualityApi';
 import { getEaqiInfo } from '../utils/aqiScale';
+import {
+  averageWindDirection,
+  calculateDewPoint,
+  getDewPointComfort,
+  calculateReliability,
+  getUvInfo,
+  getMoonDetails,
+  generateDaySummaryText,
+} from '../utils/meteoMath';
 import type {
   Location,
   WeatherModel,
@@ -16,13 +25,48 @@ import type {
   AirQualityData,
 } from '../types/weather.types';
 
+const ENSEMBLE_KEYS = [
+  'best_match',
+  'meteoswiss_icon_ch2',
+  'ecmwf_ifs025',
+  'icon_d2',
+];
+
+function getMultiModelValues(
+  dataMap: Record<string, any>,
+  prefix: string,
+  index: number
+): number[] {
+  const values: number[] = [];
+  for (const k of ENSEMBLE_KEYS) {
+    const arr = dataMap[`${prefix}_${k}`];
+    if (
+      arr &&
+      arr[index] !== null &&
+      arr[index] !== undefined &&
+      !isNaN(arr[index])
+    ) {
+      values.push(arr[index]);
+    }
+  }
+  if (values.length === 0 && dataMap[prefix] && dataMap[prefix][index] != null) {
+    values.push(dataMap[prefix][index]);
+  }
+  return values;
+}
+
+function mean(values: number[], defaultValue = 0): number {
+  if (values.length === 0) return defaultValue;
+  return values.reduce((a, b) => a + b, 0) / values.length;
+}
+
 function normalizeWeatherData(
   location: Location,
   forecast: OpenMeteoForecastResponse,
   airQuality: OpenMeteoAirQualityResponse,
   model: WeatherModel
 ): NormalizedWeatherData {
-  // Map hourly air quality by ISO date string for quick O(1) alignment
+  // Map hourly air quality by ISO string
   const aqiMap = new Map<string, { aqi: number; pm10: number; pm25: number }>();
   if (airQuality.hourly && airQuality.hourly.time) {
     for (let i = 0; i < airQuality.hourly.time.length; i++) {
@@ -34,51 +78,95 @@ function normalizeWeatherData(
     }
   }
 
-  // Pre-process all hourly forecast rows
   const allHourly: HourlyRowData[] = [];
   const hourlyCount = forecast.hourly.time.length;
+  const isEnsemble = model === 'ensemble';
 
   for (let i = 0; i < hourlyCount; i++) {
     const timeIso = forecast.hourly.time[i];
     const parsedDate = parseISO(timeIso);
     const aqiData = aqiMap.get(timeIso);
 
+    // Multi-model collection for ensemble
+    const temps = isEnsemble
+      ? getMultiModelValues(forecast.hourly, 'temperature_2m', i)
+      : [forecast.hourly.temperature_2m[i]];
+    const apparentTemps = isEnsemble
+      ? getMultiModelValues(forecast.hourly, 'apparent_temperature', i)
+      : [forecast.hourly.apparent_temperature[i]];
+    const precips = isEnsemble
+      ? getMultiModelValues(forecast.hourly, 'precipitation', i)
+      : [forecast.hourly.precipitation[i]];
+    const precipProbs = isEnsemble
+      ? getMultiModelValues(forecast.hourly, 'precipitation_probability', i)
+      : [forecast.hourly.precipitation_probability[i] ?? 0];
+    const windSpeeds = isEnsemble
+      ? getMultiModelValues(forecast.hourly, 'wind_speed_10m', i)
+      : [forecast.hourly.wind_speed_10m[i]];
+    const windGusts = isEnsemble
+      ? getMultiModelValues(forecast.hourly, 'wind_gusts_10m', i)
+      : [forecast.hourly.wind_gusts_10m[i]];
+    const windDirs = isEnsemble
+      ? getMultiModelValues(forecast.hourly, 'wind_direction_10m', i)
+      : [forecast.hourly.wind_direction_10m[i]];
+
+    const temperature = Math.round(mean(temps) * 10) / 10;
+    const apparentTemperature = Math.round(mean(apparentTemps) * 10) / 10;
+    const precipitation = Math.round(mean(precips) * 10) / 10;
+    const precipitationProbability = Math.round(mean(precipProbs));
+    const windSpeed = Math.round(mean(windSpeeds));
+    const windGustsVal = Math.round(mean(windGusts));
+    const windDirection = averageWindDirection(windDirs);
+
+    const relativeHumidity = forecast.hourly.relative_humidity_2m[i] ?? 60;
+    const dewPoint =
+      forecast.hourly.dew_point_2m?.[i] != null
+        ? Math.round(forecast.hourly.dew_point_2m[i] * 10) / 10
+        : calculateDewPoint(temperature, relativeHumidity);
+
+    const rawUv = forecast.hourly.uv_index[i] ?? 0;
+    const uvInfo = getUvInfo(rawUv);
+
+    const reliability = calculateReliability(temps, precips);
+    const surfacePressure =
+      forecast.hourly.surface_pressure?.[i] ??
+      forecast.current?.surface_pressure ??
+      1013;
+
     allHourly.push({
       time: timeIso,
       hour: format(parsedDate, 'HH:mm'),
       timestamp: parsedDate.getTime(),
-      temperature: Math.round(forecast.hourly.temperature_2m[i] * 10) / 10,
-      apparentTemperature:
-        Math.round(forecast.hourly.apparent_temperature[i] * 10) / 10,
+      temperature,
+      apparentTemperature,
+      dewPoint,
       weatherCode: forecast.hourly.weather_code[i],
-      precipitationProbability:
-        forecast.hourly.precipitation_probability[i] ?? 0,
-      precipitation:
-        Math.round((forecast.hourly.precipitation[i] ?? 0) * 10) / 10,
-      windSpeed: Math.round(forecast.hourly.wind_speed_10m[i]),
-      windDirection: forecast.hourly.wind_direction_10m[i],
-      windGusts: Math.round(forecast.hourly.wind_gusts_10m[i]),
-      uvIndex: Math.round((forecast.hourly.uv_index[i] ?? 0) * 10) / 10,
+      precipitationProbability,
+      precipitation,
+      windSpeed,
+      windDirection,
+      windGusts: windGustsVal,
+      uvIndex: Math.round(rawUv * 10) / 10,
+      uvIndexLabel: uvInfo.label,
       freezingLevel: Math.round(forecast.hourly.freezing_level_height[i] ?? 0),
-      relativeHumidity: forecast.hourly.relative_humidity_2m[i] ?? 0,
+      relativeHumidity,
       visibility: forecast.hourly.visibility[i] ?? 10000,
       cloudCover: forecast.hourly.cloud_cover[i] ?? 0,
+      surfacePressure: Math.round(surfacePressure),
       europeanAqi: aqiData?.aqi ?? null,
       pm10: aqiData?.pm10 ?? null,
       pm25: aqiData?.pm25 ?? null,
+      reliability,
     });
   }
 
-  // Build daily forecast list (7 days)
+  // Daily processing
   const daily: DailyForecastData[] = [];
   const daysCount = forecast.daily.time.length;
 
   for (let d = 0; d < daysCount; d++) {
     const dateStr = forecast.daily.time[d];
     const dateObj = parseISO(dateStr);
-    const today = isToday(dateObj);
-
-    // Filter hourly data matching this specific day
     const dayPrefix = dateStr.slice(0, 10);
     const dayHourly = allHourly.filter((h) => h.time.startsWith(dayPrefix));
 
@@ -87,34 +175,90 @@ function normalizeWeatherData(
       dayName.charAt(0).toUpperCase() + dayName.slice(1);
     const dateLabel = format(dateObj, 'EEE d MMM', { locale: it });
 
+    // Multi-model daily max / min
+    const dailyMaxTemps = isEnsemble
+      ? getMultiModelValues(forecast.daily, 'temperature_2m_max', d)
+      : [forecast.daily.temperature_2m_max[d]];
+    const dailyMinTemps = isEnsemble
+      ? getMultiModelValues(forecast.daily, 'temperature_2m_min', d)
+      : [forecast.daily.temperature_2m_min[d]];
+    const dailyPrecipSums = isEnsemble
+      ? getMultiModelValues(forecast.daily, 'precipitation_sum', d)
+      : [forecast.daily.precipitation_sum[d]];
+
+    const tempMax = Math.round(mean(dailyMaxTemps));
+    const tempMin = Math.round(mean(dailyMinTemps));
+    const precipitationSum = Math.round(mean(dailyPrecipSums) * 10) / 10;
+
+    const dewPoints = dayHourly.map((h) => h.dewPoint);
+    const dewPointMax = dewPoints.length ? Math.max(...dewPoints) : 10;
+    const dewPointMin = dewPoints.length ? Math.min(...dewPoints) : 5;
+
+    const rawUvMax = forecast.daily.uv_index_max[d] ?? 0;
+    const uvMaxInfo = getUvInfo(rawUvMax);
+
+    // Pressure trend calculation (diff between morning and evening or now +-3h)
+    const pressures = dayHourly.map((h) => h.surfacePressure);
+    const pressureAvg = pressures.length
+      ? Math.round(pressures.reduce((a, b) => a + b, 0) / pressures.length)
+      : 1013;
+    const pStart = pressures[2] ?? 1013;
+    const pEnd = pressures[pressures.length - 1] ?? 1013;
+    const pressureDiff = pEnd - pStart;
+    const pressureTrend: 'rising' | 'falling' | 'steady' =
+      pressureDiff > 1.2 ? 'rising' : pressureDiff < -1.2 ? 'falling' : 'steady';
+
+    // Reliability across day
+    const dayReliability = calculateReliability(
+      dailyMaxTemps,
+      dailyPrecipSums
+    );
+
+    // Moon details
+    const moon = getMoonDetails(
+      dateObj,
+      location.latitude,
+      location.longitude
+    );
+
+    // Dynamic smart text summary
+    const summaryText = generateDaySummaryText(dayHourly, precipitationSum);
+
     daily.push({
       date: dateStr,
       dateLabel,
       dayName: capitalizedDayName,
-      isToday: today,
+      isToday: isToday(dateObj),
       weatherCode: forecast.daily.weather_code[d],
-      tempMax: Math.round(forecast.daily.temperature_2m_max[d]),
-      tempMin: Math.round(forecast.daily.temperature_2m_min[d]),
+      tempMax,
+      tempMin,
       apparentTempMax: Math.round(forecast.daily.apparent_temperature_max[d]),
       apparentTempMin: Math.round(forecast.daily.apparent_temperature_min[d]),
+      dewPointMax,
+      dewPointMin,
       sunrise: forecast.daily.sunrise[d]
         ? format(parseISO(forecast.daily.sunrise[d]), 'HH:mm')
         : '--:--',
       sunset: forecast.daily.sunset[d]
         ? format(parseISO(forecast.daily.sunset[d]), 'HH:mm')
         : '--:--',
-      uvIndexMax: Math.round((forecast.daily.uv_index_max[d] ?? 0) * 10) / 10,
-      precipitationSum:
-        Math.round((forecast.daily.precipitation_sum[d] ?? 0) * 10) / 10,
+      moon,
+      uvIndexMax: Math.round(rawUvMax * 10) / 10,
+      uvIndexLabel: uvMaxInfo.label,
+      precipitationSum,
       precipitationProbabilityMax:
         forecast.daily.precipitation_probability_max[d] ?? 0,
       windSpeedMax: Math.round(forecast.daily.wind_speed_10m_max[d]),
       windGustsMax: Math.round(forecast.daily.wind_gusts_10m_max[d]),
+      pressureAvg,
+      pressureTrend,
+      reliability: dayReliability,
+      summaryText,
       hourly: dayHourly,
     });
   }
 
-  // Build Minutely15 slots (next 2 hours = up to 8 slots)
+  // Minutely15 upcoming slots
   const minutely15: Minutely15Slot[] = [];
   if (forecast.minutely_15 && forecast.minutely_15.time) {
     const nowEpoch = Date.now();
@@ -123,7 +267,6 @@ function normalizeWeatherData(
       const parsedTime = parseISO(timeIso);
       const timeMs = parsedTime.getTime();
 
-      // Take upcoming slots within next 120 minutes
       if (timeMs >= nowEpoch - 15 * 60 * 1000 && minutely15.length < 8) {
         minutely15.push({
           time: timeIso,
@@ -135,28 +278,63 @@ function normalizeWeatherData(
     }
   }
 
-  // Build current weather
+  // Current weather
+  const firstHourly = allHourly[0];
   const cur = forecast.current;
-  const currentFreezingLevel = allHourly[0]?.freezingLevel ?? 0;
+  const currentTemp =
+    cur?.temperature_2m != null
+      ? Math.round(cur.temperature_2m * 10) / 10
+      : firstHourly?.temperature ?? 15;
+  const currentHumidity = cur?.relative_humidity_2m ?? firstHourly?.relativeHumidity ?? 60;
+  const currentDewPoint =
+    cur?.dew_point_2m != null
+      ? Math.round(cur.dew_point_2m * 10) / 10
+      : calculateDewPoint(currentTemp, currentHumidity);
+  const dewPointComfort = getDewPointComfort(currentDewPoint).label;
+
+  // Current pressure trend using 3h delta
+  const pNow = cur?.surface_pressure ?? 1013;
+  const pPast = allHourly[Math.max(0, 0)]?.surfacePressure ?? pNow;
+  const pDelta = pNow - pPast;
+  const currentPressureTrend: 'rising' | 'falling' | 'steady' =
+    pDelta > 1 ? 'rising' : pDelta < -1 ? 'falling' : 'steady';
 
   const current = {
     time: cur?.time ?? new Date().toISOString(),
-    temperature: Math.round((cur?.temperature_2m ?? 0) * 10) / 10,
+    temperature: currentTemp,
     apparentTemperature:
-      Math.round((cur?.apparent_temperature ?? 0) * 10) / 10,
-    weatherCode: cur?.weather_code ?? 0,
+      cur?.apparent_temperature != null
+        ? Math.round(cur.apparent_temperature * 10) / 10
+        : currentTemp,
+    dewPoint: currentDewPoint,
+    dewPointComfort,
+    weatherCode: cur?.weather_code ?? firstHourly?.weatherCode ?? 0,
     isDay: cur?.is_day === 1,
     precipitation: Math.round((cur?.precipitation ?? 0) * 10) / 10,
     cloudCover: cur?.cloud_cover ?? 0,
-    surfacePressure: Math.round(cur?.surface_pressure ?? 1013),
+    surfacePressure: Math.round(pNow),
+    pressureTrend: currentPressureTrend,
     windSpeed: Math.round(cur?.wind_speed_10m ?? 0),
     windDirection: cur?.wind_direction_10m ?? 0,
     windGusts: Math.round(cur?.wind_gusts_10m ?? 0),
-    relativeHumidity: cur?.relative_humidity_2m ?? 0,
-    freezingLevel: currentFreezingLevel,
+    relativeHumidity: currentHumidity,
+    freezingLevel: firstHourly?.freezingLevel ?? 0,
+    reliability: daily[0]?.reliability ?? {
+      rating: 'high',
+      score: 90,
+      label: 'Alta',
+      colorClass: 'text-emerald-400',
+      bgClass: 'bg-emerald-950/60 border-emerald-800/80',
+      dotColorClass: 'bg-emerald-400',
+      tempSpread: 1.2,
+      tempStdDev: 0.6,
+      minTemp: currentTemp - 0.6,
+      maxTemp: currentTemp + 0.6,
+      rainConcordance: 1,
+    },
   };
 
-  // Build AirQuality
+  // AirQuality
   let airQualityData: AirQualityData | null = null;
   if (airQuality.current) {
     const aqi = airQuality.current.european_aqi ?? 0;
@@ -204,8 +382,8 @@ export function useWeatherData(location: Location, model: WeatherModel) {
 
       return normalizeWeatherData(location, forecast, airQuality, model);
     },
-    staleTime: 600000, // 10 minutes (da GEMINI.md)
-    gcTime: 3600000, // 60 minutes (da GEMINI.md)
+    staleTime: 600000,
+    gcTime: 3600000,
     refetchOnWindowFocus: false,
   });
 }
