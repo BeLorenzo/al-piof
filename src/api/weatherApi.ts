@@ -5,21 +5,15 @@ import type {
 
 const OPEN_METEO_FORECAST_URL = 'https://api.open-meteo.com/v1/forecast';
 
-export const ENSEMBLE_MODELS_PARAM =
-  'best_match,meteoswiss_icon_ch2,ecmwf_ifs025,icon_d2';
-
 export async function fetchForecast(
   latitude: number,
   longitude: number,
-  model: WeatherModel = 'ensemble'
+  model: WeatherModel = 'best_match'
 ): Promise<OpenMeteoForecastResponse> {
-  const modelsParam =
-    model === 'ensemble' ? ENSEMBLE_MODELS_PARAM : model;
-
   const params = new URLSearchParams({
     latitude: latitude.toString(),
     longitude: longitude.toString(),
-    models: modelsParam,
+    models: model,
     timezone: 'auto',
     forecast_days: '7',
     current: [

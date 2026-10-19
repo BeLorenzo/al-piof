@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Wind,
   Droplets,
@@ -11,8 +11,6 @@ import {
   TrendingUp,
   TrendingDown,
   Minus,
-  ShieldCheck,
-  Info,
 } from 'lucide-react';
 import { getWmoInfo } from '../../utils/wmoCodes';
 import { getWindDirection, getWindArrowStyle } from '../../utils/windUtils';
@@ -30,7 +28,6 @@ export const HeroSummary: React.FC<HeroSummaryProps> = ({
   selectedDayIndex,
   onOpenAirQuality,
 }) => {
-  const [showSpreadInfo, setShowSpreadInfo] = useState(false);
   const isToday = selectedDayIndex === 0;
   const currentDay = data.daily[selectedDayIndex] || data.daily[0];
 
@@ -44,10 +41,6 @@ export const HeroSummary: React.FC<HeroSummaryProps> = ({
   const windAngle = isToday
     ? data.current.windDirection
     : currentDay.hourly[12]?.windDirection ?? 0;
-
-  const reliability = isToday
-    ? data.current.reliability
-    : currentDay.reliability;
 
   const uvInfo = getUvInfo(currentDay.uvIndexMax);
   const dewPointVal = isToday ? data.current.dewPoint : currentDay.dewPointMax;
@@ -99,42 +92,6 @@ export const HeroSummary: React.FC<HeroSummaryProps> = ({
             <WmoIcon className={`w-12 h-12 ${wmo.colorClass}`} />
           </div>
         </div>
-
-        {/* Reliability Score Badge with toggleable spread info */}
-        <div className="mt-3 pt-2.5 border-t border-slate-800/80 flex items-center justify-between text-xs">
-          <div className="flex items-center gap-1.5">
-            <ShieldCheck className="w-4 h-4 text-sky-400" />
-            <span className="text-slate-400">Affidabilità Modelli:</span>
-            <span className={`font-bold ${reliability.colorClass}`}>
-              {reliability.label} ({reliability.score}%)
-            </span>
-          </div>
-
-          <button
-            onClick={() => setShowSpreadInfo((p) => !p)}
-            className="flex items-center gap-1 text-[11px] text-sky-400 hover:text-sky-300 font-medium"
-          >
-            <Info className="w-3.5 h-3.5" />
-            <span>Spread</span>
-          </button>
-        </div>
-
-        {showSpreadInfo && (
-          <div className="mt-2 p-2 rounded-xl bg-slate-950/80 border border-slate-800 text-[11px] text-slate-300 space-y-1 animate-fade-in">
-            <div className="flex justify-between">
-              <span className="text-slate-400">Forchetta min-max modelli:</span>
-              <span className="font-semibold text-white">
-                {reliability.minTemp}°C &rarr; {reliability.maxTemp}°C (Δ {reliability.tempSpread}°C)
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-400">Concordanza pioggia:</span>
-              <span className="font-semibold text-cyan-300">
-                {Math.round(reliability.rainConcordance * 100)}%
-              </span>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Bento Grid (2x3) */}

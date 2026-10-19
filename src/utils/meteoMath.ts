@@ -1,8 +1,6 @@
 import * as SunCalc from 'suncalc';
 import { format } from 'date-fns';
 import type {
-  ReliabilityInfo,
-  ReliabilityRating,
   MoonInfo,
 } from '../types/weather.types';
 
@@ -127,88 +125,7 @@ export function getUvInfo(uv: number): {
   };
 }
 
-/**
- * Multi-model ensemble reliability index calculation
- */
-export function calculateReliability(
-  temperatures: number[],
-  precipitations: number[]
-): ReliabilityInfo {
-  const validTemps = temperatures.filter((t) => typeof t === 'number' && !isNaN(t));
-  const validPrecip = precipitations.filter((p) => typeof p === 'number' && !isNaN(p));
 
-  if (validTemps.length === 0) {
-    return {
-      rating: 'medium',
-      score: 75,
-      label: 'Media',
-      colorClass: 'text-yellow-400',
-      bgClass: 'bg-yellow-950/60 border-yellow-800/80',
-      dotColorClass: 'bg-yellow-400',
-      tempSpread: 0,
-      tempStdDev: 0,
-      minTemp: 0,
-      maxTemp: 0,
-      rainConcordance: 1,
-    };
-  }
-
-  const minTemp = Math.min(...validTemps);
-  const maxTemp = Math.max(...validTemps);
-  const tempSpread = Math.round((maxTemp - minTemp) * 10) / 10;
-
-  const meanTemp = validTemps.reduce((a, b) => a + b, 0) / validTemps.length;
-  const variance =
-    validTemps.reduce((acc, val) => acc + Math.pow(val - meanTemp, 2), 0) /
-    validTemps.length;
-  const tempStdDev = Math.round(Math.sqrt(variance) * 10) / 10;
-
-  // Rain concordance (percentage of models that agree on wet vs dry)
-  let rainConcordance = 1;
-  if (validPrecip.length > 1) {
-    const wetCount = validPrecip.filter((p) => p >= 0.2).length;
-    const wetRatio = wetCount / validPrecip.length;
-    rainConcordance = Math.max(wetRatio, 1 - wetRatio); // 0.5 (split) to 1.0 (unanimous)
-  }
-
-  // Score from 0 to 100
-  let score = 100 - tempStdDev * 18 - (1 - rainConcordance) * 30;
-  score = Math.max(25, Math.min(99, Math.round(score)));
-
-  let rating: ReliabilityRating = 'high';
-  let label = 'Alta';
-  let colorClass = 'text-emerald-400';
-  let bgClass = 'bg-emerald-950/60 border-emerald-800/80';
-  let dotColorClass = 'bg-emerald-400';
-
-  if (tempStdDev > 2.2 || score < 60) {
-    rating = 'low';
-    label = 'Bassa';
-    colorClass = 'text-orange-400';
-    bgClass = 'bg-orange-950/60 border-orange-800/80';
-    dotColorClass = 'bg-orange-400';
-  } else if (tempStdDev > 1.3 || score < 80) {
-    rating = 'medium';
-    label = 'Media';
-    colorClass = 'text-yellow-400';
-    bgClass = 'bg-yellow-950/60 border-yellow-800/80';
-    dotColorClass = 'bg-yellow-400';
-  }
-
-  return {
-    rating,
-    score,
-    label,
-    colorClass,
-    bgClass,
-    dotColorClass,
-    tempSpread,
-    tempStdDev,
-    minTemp: Math.round(minTemp * 10) / 10,
-    maxTemp: Math.round(maxTemp * 10) / 10,
-    rainConcordance: Math.round(rainConcordance * 100) / 100,
-  };
-}
 
 /**
  * SunCalc Moon Phase in Italian & Moonrise / Moonset

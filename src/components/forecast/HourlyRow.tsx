@@ -8,7 +8,6 @@ import {
   Wind,
   Sun,
   Sparkles,
-  ShieldCheck,
   Thermometer,
 } from 'lucide-react';
 import { getWmoInfo } from '../../utils/wmoCodes';
@@ -52,22 +51,16 @@ export const HourlyRow: React.FC<HourlyRowProps> = ({
       {/* 5-Column Compact Row */}
       <div
         onClick={onToggle}
-        className="grid grid-cols-[56px_1fr_64px_68px_60px_20px] items-center px-3 py-2.5 cursor-pointer select-none text-xs gap-1"
+        className="grid grid-cols-[54px_1fr_64px_68px_60px_20px] items-center px-3 py-2.5 cursor-pointer select-none text-xs gap-1"
       >
-        {/* Col 1: Ora + Pallino Affidabilità */}
-        <div className="flex items-center gap-1.5">
-          <span
-            className={`w-1.5 h-1.5 rounded-full shrink-0 ${row.reliability.dotColorClass}`}
-            title={`Affidabilità: ${row.reliability.label} (${row.reliability.score}%)`}
-          />
-          <div>
-            <div className="font-bold text-slate-100">{row.hour}</div>
-            {isCurrentHour && (
-              <span className="text-[9px] px-1 py-0.2 rounded bg-sky-500/20 text-sky-300 font-semibold leading-none">
-                ORA
-              </span>
-            )}
-          </div>
+        {/* Col 1: Ora */}
+        <div>
+          <div className="font-bold text-slate-100">{row.hour}</div>
+          {isCurrentHour && (
+            <span className="text-[9px] px-1 py-0.2 rounded bg-sky-500/20 text-sky-300 font-semibold leading-none">
+              ORA
+            </span>
+          )}
         </div>
 
         {/* Col 2: Icona + Condizione */}
@@ -186,23 +179,13 @@ export const HourlyRow: React.FC<HourlyRowProps> = ({
             </div>
           </div>
 
-          <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800">
+          <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800 col-span-3 flex items-center justify-between">
             <div className="flex items-center gap-1 text-slate-400 text-[10px]">
               <Sparkles className="w-3 h-3 text-emerald-400" />
-              <span>Aria (EAQI)</span>
+              <span>Qualità Aria (EAQI):</span>
             </div>
-            <div className={`font-bold mt-0.5 ${aqiInfo.colorClass}`}>
-              {row.europeanAqi !== null ? `${row.europeanAqi} (${aqiInfo.label})` : 'N/D'}
-            </div>
-          </div>
-
-          <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800 col-span-2">
-            <div className="flex items-center gap-1 text-slate-400 text-[10px]">
-              <ShieldCheck className="w-3 h-3 text-sky-400" />
-              <span>Affidabilità Modelli ({row.reliability.score}%)</span>
-            </div>
-            <div className="font-semibold text-slate-300 mt-0.5">
-              Spread: {row.reliability.minTemp}° &rarr; {row.reliability.maxTemp}° (Δ {row.reliability.tempSpread}°C)
+            <div className={`font-bold ${aqiInfo.colorClass}`}>
+              {row.europeanAqi !== null ? `${row.europeanAqi} - ${aqiInfo.label}` : 'N/D'}
             </div>
           </div>
         </div>

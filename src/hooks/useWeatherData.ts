@@ -5,10 +5,8 @@ import { fetchForecast } from '../api/weatherApi';
 import { fetchAirQuality } from '../api/airQualityApi';
 import { getEaqiInfo } from '../utils/aqiScale';
 import {
-  averageWindDirection,
   calculateDewPoint,
   getDewPointComfort,
-  calculateReliability,
   getUvInfo,
   getMoonDetails,
   generateDaySummaryText,
@@ -24,41 +22,6 @@ import type {
   Minutely15Slot,
   AirQualityData,
 } from '../types/weather.types';
-
-const ENSEMBLE_KEYS = [
-  'best_match',
-  'meteoswiss_icon_ch2',
-  'ecmwf_ifs025',
-  'icon_d2',
-];
-
-function getMultiModelValues(
-  dataMap: Record<string, any>,
-  prefix: string,
-  index: number
-): number[] {
-  const values: number[] = [];
-  for (const k of ENSEMBLE_KEYS) {
-    const arr = dataMap[`${prefix}_${k}`];
-    if (
-      arr &&
-      arr[index] !== null &&
-      arr[index] !== undefined &&
-      !isNaN(arr[index])
-    ) {
-      values.push(arr[index]);
-    }
-  }
-  if (values.length === 0 && dataMap[prefix] && dataMap[prefix][index] != null) {
-    values.push(dataMap[prefix][index]);
-  }
-  return values;
-}
-
-function mean(values: number[], defaultValue = 0): number {
-  if (values.length === 0) return defaultValue;
-  return values.reduce((a, b) => a + b, 0) / values.length;
-}
 
 function normalizeWeatherData(
   location: Location,
@@ -80,45 +43,25 @@ function normalizeWeatherData(
 
   const allHourly: HourlyRowData[] = [];
   const hourlyCount = forecast.hourly.time.length;
-  const isEnsemble = model === 'ensemble';
 
   for (let i = 0; i < hourlyCount; i++) {
     const timeIso = forecast.hourly.time[i];
     const parsedDate = parseISO(timeIso);
     const aqiData = aqiMap.get(timeIso);
 
-    // Multi-model collection for ensemble
-    const temps = isEnsemble
-      ? getMultiModelValues(forecast.hourly, 'temperature_2m', i)
-      : [forecast.hourly.temperature_2m[i]];
-    const apparentTemps = isEnsemble
-      ? getMultiModelValues(forecast.hourly, 'apparent_temperature', i)
-      : [forecast.hourly.apparent_temperature[i]];
-    const precips = isEnsemble
-      ? getMultiModelValues(forecast.hourly, 'precipitation', i)
-      : [forecast.hourly.precipitation[i]];
-    const precipProbs = isEnsemble
-      ? getMultiModelValues(forecast.hourly, 'precipitation_probability', i)
-      : [forecast.hourly.precipitation_probability[i] ?? 0];
-    const windSpeeds = isEnsemble
-      ? getMultiModelValues(forecast.hourly, 'wind_speed_10m', i)
-      : [forecast.hourly.wind_speed_10m[i]];
-    const windGusts = isEnsemble
-      ? getMultiModelValues(forecast.hourly, 'wind_gusts_10m', i)
-      : [forecast.hourly.wind_gusts_10m[i]];
-    const windDirs = isEnsemble
-      ? getMultiModelValues(forecast.hourly, 'wind_direction_10m', i)
-      : [forecast.hourly.wind_direction_10m[i]];
+    const temperature =
+      Math.round(forecast.hourly.temperature_2m[i] * 10) / 10;
+    const apparentTemperature =
+      Math.round(forecast.hourly.apparent_temperature[i] * 10) / 10;
+    const precipitation =
+      Math.round((forecast.hourly.precipitation[i] ?? 0) * 10) / 10;
+    const precipitationProbability =
+      forecast.hourly.precipitation_probability[i] ?? 0;
+    const windSpeed = Math.round(forecast.hourly.wind_speed_10m[i]);
+    const windGustsVal = Math.round(forecast.hourly.wind_gusts_10m[i]);
+    const windDirection = forecast.hourly.wind_direction_10m[i];
 
-    const temperature = Math.round(mean(temps) * 10) / 10;
-    const apparentTemperature = Math.round(mean(apparentTemps) * 10) / 10;
-    const precipitation = Math.round(mean(precips) * 10) / 10;
-    const precipitationProbability = Math.round(mean(precipProbs));
-    const windSpeed = Math.round(mean(windSpeeds));
-    const windGustsVal = Math.round(mean(windGusts));
-    const windDirection = averageWindDirection(windDirs);
-
-    const relativeHumidity = forecast.hourly.relative_humidity_2m[i] ?? 60;
+    const relativeHumidity = forecast.hourly.relative_humidity_2m?.[i] ?? 60;
     const dewPoint =
       forecast.hourly.dew_point_2m?.[i] != null
         ? Math.round(forecast.hourly.dew_point_2m[i] * 10) / 10
@@ -127,7 +70,6 @@ function normalizeWeatherData(
     const rawUv = forecast.hourly.uv_index[i] ?? 0;
     const uvInfo = getUvInfo(rawUv);
 
-    const reliability = calculateReliability(temps, precips);
     const surfacePressure =
       forecast.hourly.surface_pressure?.[i] ??
       forecast.current?.surface_pressure ??
@@ -156,7 +98,6 @@ function normalizeWeatherData(
       europeanAqi: aqiData?.aqi ?? null,
       pm10: aqiData?.pm10 ?? null,
       pm25: aqiData?.pm25 ?? null,
-      reliability,
     });
   }
 
@@ -175,20 +116,10 @@ function normalizeWeatherData(
       dayName.charAt(0).toUpperCase() + dayName.slice(1);
     const dateLabel = format(dateObj, 'EEE d MMM', { locale: it });
 
-    // Multi-model daily max / min
-    const dailyMaxTemps = isEnsemble
-      ? getMultiModelValues(forecast.daily, 'temperature_2m_max', d)
-      : [forecast.daily.temperature_2m_max[d]];
-    const dailyMinTemps = isEnsemble
-      ? getMultiModelValues(forecast.daily, 'temperature_2m_min', d)
-      : [forecast.daily.temperature_2m_min[d]];
-    const dailyPrecipSums = isEnsemble
-      ? getMultiModelValues(forecast.daily, 'precipitation_sum', d)
-      : [forecast.daily.precipitation_sum[d]];
-
-    const tempMax = Math.round(mean(dailyMaxTemps));
-    const tempMin = Math.round(mean(dailyMinTemps));
-    const precipitationSum = Math.round(mean(dailyPrecipSums) * 10) / 10;
+    const tempMax = Math.round(forecast.daily.temperature_2m_max[d]);
+    const tempMin = Math.round(forecast.daily.temperature_2m_min[d]);
+    const precipitationSum =
+      Math.round((forecast.daily.precipitation_sum[d] ?? 0) * 10) / 10;
 
     const dewPoints = dayHourly.map((h) => h.dewPoint);
     const dewPointMax = dewPoints.length ? Math.max(...dewPoints) : 10;
@@ -197,7 +128,7 @@ function normalizeWeatherData(
     const rawUvMax = forecast.daily.uv_index_max[d] ?? 0;
     const uvMaxInfo = getUvInfo(rawUvMax);
 
-    // Pressure trend calculation (diff between morning and evening or now +-3h)
+    // Pressure trend calculation (diff between morning and evening)
     const pressures = dayHourly.map((h) => h.surfacePressure);
     const pressureAvg = pressures.length
       ? Math.round(pressures.reduce((a, b) => a + b, 0) / pressures.length)
@@ -207,12 +138,6 @@ function normalizeWeatherData(
     const pressureDiff = pEnd - pStart;
     const pressureTrend: 'rising' | 'falling' | 'steady' =
       pressureDiff > 1.2 ? 'rising' : pressureDiff < -1.2 ? 'falling' : 'steady';
-
-    // Reliability across day
-    const dayReliability = calculateReliability(
-      dailyMaxTemps,
-      dailyPrecipSums
-    );
 
     // Moon details
     const moon = getMoonDetails(
@@ -252,7 +177,6 @@ function normalizeWeatherData(
       windGustsMax: Math.round(forecast.daily.wind_gusts_10m_max[d]),
       pressureAvg,
       pressureTrend,
-      reliability: dayReliability,
       summaryText,
       hourly: dayHourly,
     });
@@ -285,14 +209,14 @@ function normalizeWeatherData(
     cur?.temperature_2m != null
       ? Math.round(cur.temperature_2m * 10) / 10
       : firstHourly?.temperature ?? 15;
-  const currentHumidity = cur?.relative_humidity_2m ?? firstHourly?.relativeHumidity ?? 60;
+  const currentHumidity =
+    cur?.relative_humidity_2m ?? firstHourly?.relativeHumidity ?? 60;
   const currentDewPoint =
     cur?.dew_point_2m != null
       ? Math.round(cur.dew_point_2m * 10) / 10
       : calculateDewPoint(currentTemp, currentHumidity);
   const dewPointComfort = getDewPointComfort(currentDewPoint).label;
 
-  // Current pressure trend using 3h delta
   const pNow = cur?.surface_pressure ?? 1013;
   const pPast = allHourly[Math.max(0, 0)]?.surfacePressure ?? pNow;
   const pDelta = pNow - pPast;
@@ -319,19 +243,6 @@ function normalizeWeatherData(
     windGusts: Math.round(cur?.wind_gusts_10m ?? 0),
     relativeHumidity: currentHumidity,
     freezingLevel: firstHourly?.freezingLevel ?? 0,
-    reliability: daily[0]?.reliability ?? {
-      rating: 'high',
-      score: 90,
-      label: 'Alta',
-      colorClass: 'text-emerald-400',
-      bgClass: 'bg-emerald-950/60 border-emerald-800/80',
-      dotColorClass: 'bg-emerald-400',
-      tempSpread: 1.2,
-      tempStdDev: 0.6,
-      minTemp: currentTemp - 0.6,
-      maxTemp: currentTemp + 0.6,
-      rainConcordance: 1,
-    },
   };
 
   // AirQuality

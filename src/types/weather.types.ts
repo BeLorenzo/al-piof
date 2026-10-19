@@ -1,5 +1,4 @@
 export type WeatherModel =
-  | 'ensemble'
   | 'best_match'
   | 'meteoswiss_icon_ch2'
   | 'ecmwf_ifs025'
@@ -180,7 +179,7 @@ export interface HourlyRowData {
   europeanAqi: number | null;
   pm10: number | null;
   pm25: number | null;
-  reliability: ReliabilityInfo;
+  reliability?: ReliabilityInfo;
 }
 
 export interface MoonInfo {
@@ -215,7 +214,7 @@ export interface DailyForecastData {
   windGustsMax: number;
   pressureAvg: number;
   pressureTrend: 'rising' | 'falling' | 'steady';
-  reliability: ReliabilityInfo;
+  reliability?: ReliabilityInfo;
   summaryText: string;
   hourly: HourlyRowData[]; // 24 hours for this day
 }
@@ -237,7 +236,7 @@ export interface CurrentWeatherData {
   windGusts: number;
   relativeHumidity: number;
   freezingLevel: number;
-  reliability: ReliabilityInfo;
+  reliability?: ReliabilityInfo;
 }
 
 export type EaqiLevel =

@@ -19,7 +19,6 @@ interface TopBarProps {
 }
 
 const MODELS: { id: WeatherModel; label: string }[] = [
-  { id: 'ensemble', label: 'Media Ensemble ⭐' },
   { id: 'best_match', label: 'Auto (Blend)' },
   { id: 'meteoswiss_icon_ch2', label: 'MeteoSwiss' },
   { id: 'ecmwf_ifs025', label: 'ECMWF' },

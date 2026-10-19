@@ -76,7 +76,7 @@ export const useAppStore = create<AppState>()(
     (set, get) => ({
       selectedLocation: DEFAULT_FALLBACK_LOCATION,
       favorites: DEFAULT_FAVORITES,
-      selectedModel: 'ensemble',
+      selectedModel: 'best_match',
       selectedDayIndex: 0,
       viewMode: 'hourly',
 
