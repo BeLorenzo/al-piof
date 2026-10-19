@@ -34,6 +34,7 @@ export interface MetricComparison {
   min: number;
   max: number;
   spread: number;
+  average?: number;
   agreement: 'Alta' | 'Media' | 'Bassa';
 }
 

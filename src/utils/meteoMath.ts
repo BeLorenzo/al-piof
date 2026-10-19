@@ -243,6 +243,7 @@ export function buildMetricComparison(
   const min = Math.min(...valuesOnly);
   const max = Math.max(...valuesOnly);
   const spread = Math.round((max - min) * 10) / 10;
+  const average = Math.round((valuesOnly.reduce((a, b) => a + b, 0) / valuesOnly.length) * 10) / 10;
 
   let agreement: 'Alta' | 'Media' | 'Bassa' = 'Alta';
   if (spread > 3.0) {
@@ -256,6 +257,7 @@ export function buildMetricComparison(
     min: Math.round(min * 10) / 10,
     max: Math.round(max * 10) / 10,
     spread,
+    average,
     agreement,
   };
 }

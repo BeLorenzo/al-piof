@@ -112,6 +112,12 @@ export const ModelComparisonCard: React.FC<ModelComparisonCardProps> = ({
                 </div>
               ))}
             </div>
+            {tempMax.average != null && (
+              <div className="mt-1.5 py-1 px-2 rounded-lg bg-rose-950/40 border border-rose-800/40 text-[10px] text-rose-300 flex items-center justify-between">
+                <span>Media applicata:</span>
+                <span className="font-bold text-xs">{tempMax.average}&deg;C</span>
+              </div>
+            )}
           </div>
 
           {/* 2. Temp Min Comparison */}
@@ -133,6 +139,12 @@ export const ModelComparisonCard: React.FC<ModelComparisonCardProps> = ({
                 </div>
               ))}
             </div>
+            {tempMin.average != null && (
+              <div className="mt-1.5 py-1 px-2 rounded-lg bg-sky-950/40 border border-sky-800/40 text-[10px] text-sky-300 flex items-center justify-between">
+                <span>Media applicata:</span>
+                <span className="font-bold text-xs">{tempMin.average}&deg;C</span>
+              </div>
+            )}
           </div>
 
           {/* 3. Rain Concordance */}

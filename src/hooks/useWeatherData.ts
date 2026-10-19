@@ -71,10 +71,6 @@ function normalizeWeatherData(
     const windDirection = forecast.hourly.wind_direction_10m[i];
 
     const relativeHumidity = forecast.hourly.relative_humidity_2m?.[i] ?? 60;
-    const dewPoint =
-      forecast.hourly.dew_point_2m?.[i] != null
-        ? Math.round(forecast.hourly.dew_point_2m[i] * 10) / 10
-        : calculateDewPoint(temperature, relativeHumidity);
 
     const rawUv = forecast.hourly.uv_index[i] ?? 0;
     const uvInfo = getUvInfo(rawUv);
@@ -125,13 +121,23 @@ function normalizeWeatherData(
       hourlyComparison = calculateHourlyModelComparison(tempItems, rainItems);
     }
 
+    // Se la comparazione multimodello è presente, la temperatura principale mostrata è la media dei modelli
+    const effectiveTemp =
+      hourlyComparison?.temperature.average != null
+        ? hourlyComparison.temperature.average
+        : temperature;
+    const tempDelta = effectiveTemp - temperature;
+    const effectiveApparentTemp =
+      Math.round((apparentTemperature + tempDelta) * 10) / 10;
+    const effectiveDewPoint = calculateDewPoint(effectiveTemp, relativeHumidity);
+
     allHourly.push({
       time: timeIso,
       hour: format(parsedDate, 'HH:mm'),
       timestamp: parsedDate.getTime(),
-      temperature,
-      apparentTemperature,
-      dewPoint,
+      temperature: effectiveTemp,
+      apparentTemperature: effectiveApparentTemp,
+      dewPoint: effectiveDewPoint,
       weatherCode: forecast.hourly.weather_code[i],
       precipitationProbability,
       precipitation,
@@ -259,14 +265,24 @@ function normalizeWeatherData(
       dayComparison = calculateDayModelComparison(maxItems, minItems, rainItems, d);
     }
 
+    // Se la comparazione multimodello è presente, applichiamo la media dei modelli a Max e Min
+    const effectiveTempMax =
+      dayComparison?.tempMax.average != null
+        ? Math.round(dayComparison.tempMax.average)
+        : tempMax;
+    const effectiveTempMin =
+      dayComparison?.tempMin.average != null
+        ? Math.round(dayComparison.tempMin.average)
+        : tempMin;
+
     daily.push({
       date: dateStr,
       dateLabel,
       dayName: capitalizedDayName,
       isToday: isToday(dateObj),
       weatherCode: forecast.daily.weather_code[d],
-      tempMax,
-      tempMin,
+      tempMax: effectiveTempMax,
+      tempMin: effectiveTempMin,
       apparentTempMax: Math.round(forecast.daily.apparent_temperature_max[d]),
       apparentTempMin: Math.round(forecast.daily.apparent_temperature_min[d]),
       dewPointMax,
@@ -313,19 +329,24 @@ function normalizeWeatherData(
     }
   }
 
-  // Current weather
-  const firstHourly = allHourly[0];
+  // Current weather: usiamo lo slot orario corrente che ha già la temperatura media multimodello
+  const nowHourIso = forecast.current?.time ? forecast.current.time.slice(0, 13) : '';
+  const currentSlot = allHourly.find((h) => h.time.startsWith(nowHourIso)) ?? allHourly[0];
   const cur = forecast.current;
+
   const currentTemp =
-    cur?.temperature_2m != null
+    currentSlot?.temperature ??
+    (cur?.temperature_2m != null
       ? Math.round(cur.temperature_2m * 10) / 10
-      : firstHourly?.temperature ?? 15;
+      : 15);
+  const currentApparentTemp =
+    currentSlot?.apparentTemperature ??
+    (cur?.apparent_temperature != null
+      ? Math.round(cur.apparent_temperature * 10) / 10
+      : currentTemp);
   const currentHumidity =
-    cur?.relative_humidity_2m ?? firstHourly?.relativeHumidity ?? 60;
-  const currentDewPoint =
-    cur?.dew_point_2m != null
-      ? Math.round(cur.dew_point_2m * 10) / 10
-      : calculateDewPoint(currentTemp, currentHumidity);
+    cur?.relative_humidity_2m ?? currentSlot?.relativeHumidity ?? 60;
+  const currentDewPoint = calculateDewPoint(currentTemp, currentHumidity);
   const dewPointComfort = getDewPointComfort(currentDewPoint).label;
 
   const pNow = cur?.surface_pressure ?? 1013;
@@ -337,13 +358,10 @@ function normalizeWeatherData(
   const current = {
     time: cur?.time ?? new Date().toISOString(),
     temperature: currentTemp,
-    apparentTemperature:
-      cur?.apparent_temperature != null
-        ? Math.round(cur.apparent_temperature * 10) / 10
-        : currentTemp,
+    apparentTemperature: currentApparentTemp,
     dewPoint: currentDewPoint,
     dewPointComfort,
-    weatherCode: cur?.weather_code ?? firstHourly?.weatherCode ?? 0,
+    weatherCode: cur?.weather_code ?? currentSlot?.weatherCode ?? 0,
     isDay: cur?.is_day === 1,
     precipitation: Math.round((cur?.precipitation ?? 0) * 10) / 10,
     cloudCover: cur?.cloud_cover ?? 0,
@@ -353,8 +371,8 @@ function normalizeWeatherData(
     windDirection: cur?.wind_direction_10m ?? 0,
     windGusts: Math.round(cur?.wind_gusts_10m ?? 0),
     relativeHumidity: currentHumidity,
-    freezingLevel: firstHourly?.freezingLevel ?? 0,
-    comparison: firstHourly?.comparison,
+    freezingLevel: currentSlot?.freezingLevel ?? 0,
+    comparison: currentSlot?.comparison ?? allHourly[0]?.comparison,
   };
 
   // AirQuality

@@ -209,6 +209,11 @@ export const HourlyRow: React.FC<HourlyRowProps> = ({
                   </div>
                 ))}
               </div>
+              {row.comparison.temperature.average != null && (
+                <div className="text-[10px] text-sky-300 font-medium text-center bg-sky-950/40 rounded py-0.5 border border-sky-800/40">
+                  Media applicata: <strong>{row.comparison.temperature.average}&deg;C</strong>
+                </div>
+              )}
 
               {/* Rain Concordance */}
               <div className="flex items-center justify-between text-[10px] text-slate-400 pt-0.5 border-t border-slate-800/50">
