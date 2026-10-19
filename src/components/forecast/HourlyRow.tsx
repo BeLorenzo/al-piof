@@ -51,65 +51,93 @@ export const HourlyRow: React.FC<HourlyRowProps> = ({
       {/* 5-Column Compact Row */}
       <div
         onClick={onToggle}
-        className="grid grid-cols-[54px_1fr_64px_68px_60px_20px] items-center px-3 py-2.5 cursor-pointer select-none text-xs gap-1"
+        className={`grid grid-cols-[54px_1fr_52px_64px_58px_16px] items-center px-3.5 py-2.5 cursor-pointer select-none text-xs gap-1.5 transition-all duration-150 ${
+          isCurrentHour
+            ? 'bg-sky-500/10'
+            : isExpanded
+            ? 'bg-slate-800/40'
+            : 'hover:bg-slate-800/25 active:bg-slate-800/40'
+        }`}
       >
         {/* Col 1: Ora + Pallino Affidabilità */}
-        <div>
+        <div className="flex flex-col items-start justify-center">
           <div className="flex items-center gap-1.5">
-            <span className="font-bold text-slate-100">{row.hour}</span>
+            <span
+              className={`text-[13px] font-bold tracking-tight ${
+                isCurrentHour ? 'text-sky-300' : 'text-slate-100'
+              }`}
+            >
+              {row.hour}
+            </span>
             {row.comparison && (
               <span
-                className={`w-1.5 h-1.5 rounded-full shrink-0 ${row.comparison.dotColorClass}`}
+                className={`w-1.5 h-1.5 rounded-full shrink-0 shadow-sm ${row.comparison.dotColorClass}`}
                 title={`Affidabilità ore ${row.hour}: ${row.comparison.overallReliability} (${row.comparison.overallScore}%)`}
               />
             )}
           </div>
           {isCurrentHour && (
-            <span className="text-[9px] px-1 py-0.2 rounded bg-sky-500/20 text-sky-300 font-semibold leading-none">
+            <span className="text-[8px] tracking-wider px-1 py-0.5 rounded bg-sky-500/25 text-sky-300 font-extrabold uppercase mt-0.5">
               ORA
             </span>
           )}
         </div>
 
         {/* Col 2: Icona + Condizione */}
-        <div className="flex items-center gap-1.5 min-w-0 pr-1">
-          <WmoIcon className={`w-4 h-4 shrink-0 ${wmo.colorClass}`} />
+        <div className="flex items-center gap-2 min-w-0 pr-1">
+          <div className="p-1 rounded-lg bg-slate-800/60 shrink-0">
+            <WmoIcon className={`w-4 h-4 ${wmo.colorClass}`} />
+          </div>
           <span className="truncate text-slate-300 text-[11px] font-medium">
             {wmo.label}
           </span>
         </div>
 
         {/* Col 3: Temp (Percepita) */}
-        <div className="text-right">
-          <span className="font-bold text-white text-[13px]">{row.temperature}°</span>
-          <span className="text-[10px] text-slate-400 block leading-tight">
-            ({row.apparentTemperature}°)
+        <div className="text-right flex flex-col items-end">
+          <span className="font-bold text-white text-[14px] leading-tight">
+            {row.temperature}°
+          </span>
+          <span className="text-[10px] text-slate-500 leading-none">
+            {row.apparentTemperature}°
           </span>
         </div>
 
         {/* Col 4: Pioggia (% + mm) */}
-        <div className="text-right">
-          <div
-            className={`font-semibold text-[11px] ${
-              row.precipitation > 0 ? 'text-cyan-300' : 'text-slate-500'
+        <div className="text-right flex flex-col items-end">
+          {row.precipitation > 0 ? (
+            <div className="flex items-center gap-1 text-cyan-300 font-semibold text-[11px]">
+              <Droplets className="w-2.5 h-2.5 shrink-0" />
+              <span>{row.precipitation} mm</span>
+            </div>
+          ) : (
+            <span className="text-slate-600 text-[11px] font-normal">0 mm</span>
+          )}
+          <span
+            className={`text-[9px] ${
+              row.precipitationProbability > 20
+                ? 'text-cyan-400 font-medium'
+                : 'text-slate-500'
             }`}
           >
-            {row.precipitation > 0 ? `${row.precipitation} mm` : '0 mm'}
-          </div>
-          <div className="text-[10px] text-slate-400 leading-tight">
             {row.precipitationProbability}%
-          </div>
+          </span>
         </div>
 
         {/* Col 5: Vento (km/h + Freccia) */}
         <div className="flex items-center justify-end gap-1 text-right text-slate-300">
-          <div>
-            <span className="font-semibold text-[11px]">{row.windSpeed}</span>
-            <span className="text-[9px] text-slate-500 block leading-tight">
+          <div className="leading-tight">
+            <span className="font-semibold text-[11px] text-slate-300">
+              {row.windSpeed}
+            </span>
+            <span className="text-[9px] text-slate-500 block">
               {windDir}
             </span>
           </div>
-          <span style={getWindArrowStyle(row.windDirection)} className="text-cyan-400">
+          <span
+            style={getWindArrowStyle(row.windDirection)}
+            className="text-cyan-400 shrink-0"
+          >
             <ArrowUp className="w-3.5 h-3.5" />
           </span>
         </div>
@@ -117,8 +145,8 @@ export const HourlyRow: React.FC<HourlyRowProps> = ({
         {/* Accordion Chevron */}
         <div className="flex justify-end text-slate-500">
           <ChevronDown
-            className={`w-3.5 h-3.5 transition-transform ${
-              isExpanded ? 'rotate-180 text-sky-400' : ''
+            className={`w-3.5 h-3.5 transition-transform duration-200 ${
+              isExpanded ? 'rotate-180 text-sky-400' : 'text-slate-600'
             }`}
           />
         </div>

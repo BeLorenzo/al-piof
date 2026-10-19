@@ -29,30 +29,33 @@ export const HourlyVerticalList: React.FC<HourlyVerticalListProps> = ({
     : hourly;
 
   return (
-    <div className="w-full bg-slate-950 px-4 py-2">
+    <div className="w-full px-3 py-2 space-y-2">
       {/* Header with filter toggle */}
-      <div className="flex items-center justify-between pb-2 pt-1 border-b border-slate-800 text-xs text-slate-400">
-        <span className="font-semibold text-slate-300">
-          Dettaglio Ora per Ora ({displayedRows.length} ore)
+      <div className="flex items-center justify-between px-1 text-xs text-slate-400">
+        <span className="font-semibold text-slate-200 flex items-center gap-1.5">
+          <span>Previsione Oraria</span>
+          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-800 text-slate-400 font-normal">
+            {displayedRows.length} ore
+          </span>
         </span>
 
         {isToday && (
           <button
             onClick={() => setOnlyFromNow((prev) => !prev)}
-            className={`flex items-center gap-1 px-2.5 py-1 rounded-lg border text-[11px] font-medium transition-colors ${
+            className={`flex items-center gap-1 px-2.5 py-1 rounded-full border text-[11px] font-medium transition-colors ${
               onlyFromNow
-                ? 'bg-sky-500/20 border-sky-500/60 text-sky-300'
-                : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+                ? 'bg-sky-500/20 border-sky-500/60 text-sky-300 font-semibold shadow-sm'
+                : 'bg-slate-900/80 border-slate-800 text-slate-400 hover:text-slate-200'
             }`}
           >
             <Filter className="w-3 h-3" />
-            <span>Da adesso in poi</span>
+            <span>Da adesso</span>
           </button>
         )}
       </div>
 
-      {/* Rows Container */}
-      <div className="divide-y divide-slate-800/40">
+      {/* Rows Grouped in Frosted Glass Container */}
+      <div className="rounded-3xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-md overflow-hidden shadow-xl divide-y divide-slate-800/50">
         {displayedRows.map((row, idx) => {
           const hourNum = parseInt(row.hour.split(':')[0], 10);
           const isCurrent = isToday && hourNum === currentHourNum;

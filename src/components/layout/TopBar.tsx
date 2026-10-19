@@ -5,9 +5,6 @@ import {
   Star,
   Navigation,
   Search,
-  ListFilter,
-  LineChart,
-  Radar,
   Loader2,
 } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
@@ -30,10 +27,8 @@ export const TopBar: React.FC<TopBarProps> = ({ onOpenSearch }) => {
     selectedLocation,
     favorites,
     selectedModel,
-    viewMode,
     setSelectedLocation,
     setSelectedModel,
-    setViewMode,
     toggleFavorite,
     isFavorite,
   } = useAppStore();
@@ -42,9 +37,9 @@ export const TopBar: React.FC<TopBarProps> = ({ onOpenSearch }) => {
   const isFav = isFavorite(selectedLocation.id);
 
   return (
-    <header className="sticky top-0 z-40 bg-slate-950/85 backdrop-blur-md border-b border-slate-800/80 px-4 pt-3 pb-2.5">
+    <header className="sticky top-0 z-40 bg-slate-950/85 backdrop-blur-md border-b border-slate-800/80 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-2.5">
       {/* Upper line: App title, active model selector and quick tools */}
-      <div className="flex items-center justify-between gap-2 mb-2.5">
+      <div className="flex items-center justify-between gap-2 mb-2">
         <div className="flex items-center gap-2">
           <div className="p-1.5 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-400">
             <CloudRain className="w-5 h-5" />
@@ -53,8 +48,8 @@ export const TopBar: React.FC<TopBarProps> = ({ onOpenSearch }) => {
             <h1 className="text-base font-bold text-white tracking-tight leading-none">
               Al piöf
             </h1>
-            <span className="text-[10px] text-slate-400 font-medium">
-              Nord Italia & Alpi
+            <span className="text-[10px] text-sky-400/80 font-medium">
+              Previsioni Multi-Modello
             </span>
           </div>
         </div>
@@ -151,45 +146,6 @@ export const TopBar: React.FC<TopBarProps> = ({ onOpenSearch }) => {
           })}
         </div>
       )}
-
-      {/* Main View Mode Selector */}
-      <div className="grid grid-cols-3 gap-1 bg-slate-900/90 p-1 rounded-xl border border-slate-800/90 mt-1">
-        <button
-          onClick={() => setViewMode('hourly')}
-          className={`flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
-            viewMode === 'hourly'
-              ? 'bg-slate-800 text-sky-300 shadow-sm border border-slate-700/60'
-              : 'text-slate-400 hover:text-slate-200'
-          }`}
-        >
-          <ListFilter className="w-3.5 h-3.5" />
-          <span>Oraria</span>
-        </button>
-
-        <button
-          onClick={() => setViewMode('chart')}
-          className={`flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
-            viewMode === 'chart'
-              ? 'bg-slate-800 text-sky-300 shadow-sm border border-slate-700/60'
-              : 'text-slate-400 hover:text-slate-200'
-          }`}
-        >
-          <LineChart className="w-3.5 h-3.5" />
-          <span>Grafico</span>
-        </button>
-
-        <button
-          onClick={() => setViewMode('radar')}
-          className={`flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
-            viewMode === 'radar'
-              ? 'bg-slate-800 text-sky-300 shadow-sm border border-slate-700/60'
-              : 'text-slate-400 hover:text-slate-200'
-          }`}
-        >
-          <Radar className="w-3.5 h-3.5" />
-          <span>Radar</span>
-        </button>
-      </div>
     </header>
   );
 };
