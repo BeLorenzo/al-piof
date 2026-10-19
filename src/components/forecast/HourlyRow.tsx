@@ -53,9 +53,17 @@ export const HourlyRow: React.FC<HourlyRowProps> = ({
         onClick={onToggle}
         className="grid grid-cols-[54px_1fr_64px_68px_60px_20px] items-center px-3 py-2.5 cursor-pointer select-none text-xs gap-1"
       >
-        {/* Col 1: Ora */}
+        {/* Col 1: Ora + Pallino Affidabilità */}
         <div>
-          <div className="font-bold text-slate-100">{row.hour}</div>
+          <div className="flex items-center gap-1.5">
+            <span className="font-bold text-slate-100">{row.hour}</span>
+            {row.comparison && (
+              <span
+                className={`w-1.5 h-1.5 rounded-full shrink-0 ${row.comparison.dotColorClass}`}
+                title={`Affidabilità ore ${row.hour}: ${row.comparison.overallReliability} (${row.comparison.overallScore}%)`}
+              />
+            )}
+          </div>
           {isCurrentHour && (
             <span className="text-[9px] px-1 py-0.2 rounded bg-sky-500/20 text-sky-300 font-semibold leading-none">
               ORA
@@ -178,6 +186,39 @@ export const HourlyRow: React.FC<HourlyRowProps> = ({
               {uvInfo.ratioText} ({uvInfo.label})
             </div>
           </div>
+
+          {/* Multi-Model Comparison & Reliability */}
+          {row.comparison && (
+            <div className="p-2.5 rounded-lg bg-slate-900/80 border border-slate-800 col-span-3 space-y-1.5">
+              <div className="flex items-center justify-between text-[11px] text-slate-300">
+                <span className="font-semibold flex items-center gap-1.5">
+                  <span className={`w-2 h-2 rounded-full ${row.comparison.dotColorClass}`} />
+                  Confronto Modelli ({row.comparison.overallReliability} • {row.comparison.overallScore}%)
+                </span>
+                <span className="text-[10px] text-slate-400">
+                  Spread &Delta; {row.comparison.temperature.spread}&deg;C ({row.comparison.temperature.agreement})
+                </span>
+              </div>
+
+              {/* Temperatures */}
+              <div className="grid grid-cols-3 gap-1.5 text-center text-[10px]">
+                {row.comparison.temperature.values.map((v) => (
+                  <div key={v.modelId} className="p-1 rounded bg-slate-950/70 border border-slate-800/80">
+                    <span className="text-slate-400 block truncate">{v.modelName}</span>
+                    <strong className="text-slate-100 text-[11px]">{v.value}&deg;C</strong>
+                  </div>
+                ))}
+              </div>
+
+              {/* Rain Concordance */}
+              <div className="flex items-center justify-between text-[10px] text-slate-400 pt-0.5 border-t border-slate-800/50">
+                <span>Pioggia modelli:</span>
+                <span className="text-cyan-300 font-medium">
+                  {row.comparison.rain.concordanceLabel}
+                </span>
+              </div>
+            </div>
+          )}
 
           <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800 col-span-3 flex items-center justify-between">
             <div className="flex items-center gap-1 text-slate-400 text-[10px]">

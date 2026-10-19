@@ -15,6 +15,7 @@ import {
 import { getWmoInfo } from '../../utils/wmoCodes';
 import { getWindDirection, getWindArrowStyle } from '../../utils/windUtils';
 import { getUvInfo, getDewPointComfort } from '../../utils/meteoMath';
+import { ModelComparisonCard } from '../forecast/ModelComparisonCard';
 import type { NormalizedWeatherData } from '../../types/weather.types';
 
 interface HeroSummaryProps {
@@ -93,6 +94,12 @@ export const HeroSummary: React.FC<HeroSummaryProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Multi-Model Comparison & Reliability Badge */}
+      <ModelComparisonCard
+        comparison={currentDay.comparison}
+        dayName={isToday ? 'Oggi' : currentDay.dayName}
+      />
 
       {/* Bento Grid (2x3) */}
       <div className="grid grid-cols-2 gap-2">

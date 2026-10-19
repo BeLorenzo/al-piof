@@ -23,20 +23,43 @@ export interface Location {
   isCurrentLocation?: boolean;
 }
 
-export type ReliabilityRating = 'high' | 'medium' | 'low';
+export interface ModelValueItem {
+  modelName: string;
+  modelId: string;
+  value: number;
+}
 
-export interface ReliabilityInfo {
-  rating: ReliabilityRating;
-  score: number; // 0-100%
-  label: string; // "Alta", "Media", "Bassa"
+export interface MetricComparison {
+  values: ModelValueItem[];
+  min: number;
+  max: number;
+  spread: number;
+  agreement: 'Alta' | 'Media' | 'Bassa';
+}
+
+export interface RainComparison {
+  values: ModelValueItem[];
+  wetModelsCount: number;
+  totalModelsCount: number;
+  concordancePct: number;
+  concordanceLabel: string;
+}
+
+export interface DayModelComparison {
+  tempMax: MetricComparison;
+  tempMin: MetricComparison;
+  rain: RainComparison;
+  overallReliability: 'Alta' | 'Media' | 'Bassa';
+  overallScore: number;
   colorClass: string;
-  bgClass: string;
+}
+
+export interface HourlyModelComparison {
+  temperature: MetricComparison;
+  rain: RainComparison;
+  overallReliability: 'Alta' | 'Media' | 'Bassa';
+  overallScore: number;
   dotColorClass: string;
-  tempSpread: number; // ΔT tra modelli (°C)
-  tempStdDev: number;
-  minTemp: number;
-  maxTemp: number;
-  rainConcordance: number; // 0-1
 }
 
 // --- Raw Open-Meteo Forecast Response ---
@@ -179,7 +202,7 @@ export interface HourlyRowData {
   europeanAqi: number | null;
   pm10: number | null;
   pm25: number | null;
-  reliability?: ReliabilityInfo;
+  comparison?: HourlyModelComparison;
 }
 
 export interface MoonInfo {
@@ -214,7 +237,7 @@ export interface DailyForecastData {
   windGustsMax: number;
   pressureAvg: number;
   pressureTrend: 'rising' | 'falling' | 'steady';
-  reliability?: ReliabilityInfo;
+  comparison?: DayModelComparison;
   summaryText: string;
   hourly: HourlyRowData[]; // 24 hours for this day
 }
@@ -236,7 +259,7 @@ export interface CurrentWeatherData {
   windGusts: number;
   relativeHumidity: number;
   freezingLevel: number;
-  reliability?: ReliabilityInfo;
+  comparison?: HourlyModelComparison;
 }
 
 export type EaqiLevel =

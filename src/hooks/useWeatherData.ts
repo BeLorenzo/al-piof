@@ -1,7 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 import { format, parseISO, isToday } from 'date-fns';
 import { it } from 'date-fns/locale';
-import { fetchForecast } from '../api/weatherApi';
+import {
+  fetchForecast,
+  fetchModelComparisons,
+  RawModelComparisonsResponse,
+} from '../api/weatherApi';
 import { fetchAirQuality } from '../api/airQualityApi';
 import { getEaqiInfo } from '../utils/aqiScale';
 import {
@@ -10,6 +14,8 @@ import {
   getUvInfo,
   getMoonDetails,
   generateDaySummaryText,
+  calculateDayModelComparison,
+  calculateHourlyModelComparison,
 } from '../utils/meteoMath';
 import type {
   Location,
@@ -21,13 +27,16 @@ import type {
   HourlyRowData,
   Minutely15Slot,
   AirQualityData,
+  DayModelComparison,
+  HourlyModelComparison,
 } from '../types/weather.types';
 
 function normalizeWeatherData(
   location: Location,
   forecast: OpenMeteoForecastResponse,
   airQuality: OpenMeteoAirQualityResponse,
-  model: WeatherModel
+  model: WeatherModel,
+  comparisons?: RawModelComparisonsResponse | null
 ): NormalizedWeatherData {
   // Map hourly air quality by ISO string
   const aqiMap = new Map<string, { aqi: number; pm10: number; pm25: number }>();
@@ -75,6 +84,47 @@ function normalizeWeatherData(
       forecast.current?.surface_pressure ??
       1013;
 
+    let hourlyComparison: HourlyModelComparison | undefined;
+    if (comparisons?.hourly) {
+      const tempItems = [
+        {
+          modelName: 'MeteoSwiss',
+          modelId: 'meteoswiss_icon_ch2',
+          value: comparisons.hourly.temperature_2m_meteoswiss_icon_ch2?.[i],
+        },
+        {
+          modelName: 'ECMWF',
+          modelId: 'ecmwf_ifs025',
+          value: comparisons.hourly.temperature_2m_ecmwf_ifs025?.[i],
+        },
+        {
+          modelName: 'ICON-D2',
+          modelId: 'icon_d2',
+          value: comparisons.hourly.temperature_2m_icon_d2?.[i],
+        },
+      ];
+
+      const rainItems = [
+        {
+          modelName: 'MeteoSwiss',
+          modelId: 'meteoswiss_icon_ch2',
+          value: comparisons.hourly.precipitation_meteoswiss_icon_ch2?.[i],
+        },
+        {
+          modelName: 'ECMWF',
+          modelId: 'ecmwf_ifs025',
+          value: comparisons.hourly.precipitation_ecmwf_ifs025?.[i],
+        },
+        {
+          modelName: 'ICON-D2',
+          modelId: 'icon_d2',
+          value: comparisons.hourly.precipitation_icon_d2?.[i],
+        },
+      ];
+
+      hourlyComparison = calculateHourlyModelComparison(tempItems, rainItems);
+    }
+
     allHourly.push({
       time: timeIso,
       hour: format(parsedDate, 'HH:mm'),
@@ -98,6 +148,7 @@ function normalizeWeatherData(
       europeanAqi: aqiData?.aqi ?? null,
       pm10: aqiData?.pm10 ?? null,
       pm25: aqiData?.pm25 ?? null,
+      comparison: hourlyComparison,
     });
   }
 
@@ -149,6 +200,65 @@ function normalizeWeatherData(
     // Dynamic smart text summary
     const summaryText = generateDaySummaryText(dayHourly, precipitationSum);
 
+    let dayComparison: DayModelComparison | undefined;
+    if (comparisons?.daily) {
+      const maxItems = [
+        {
+          modelName: 'MeteoSwiss',
+          modelId: 'meteoswiss_icon_ch2',
+          value: comparisons.daily.temperature_2m_max_meteoswiss_icon_ch2?.[d],
+        },
+        {
+          modelName: 'ECMWF',
+          modelId: 'ecmwf_ifs025',
+          value: comparisons.daily.temperature_2m_max_ecmwf_ifs025?.[d],
+        },
+        {
+          modelName: 'ICON-D2',
+          modelId: 'icon_d2',
+          value: comparisons.daily.temperature_2m_max_icon_d2?.[d],
+        },
+      ];
+
+      const minItems = [
+        {
+          modelName: 'MeteoSwiss',
+          modelId: 'meteoswiss_icon_ch2',
+          value: comparisons.daily.temperature_2m_min_meteoswiss_icon_ch2?.[d],
+        },
+        {
+          modelName: 'ECMWF',
+          modelId: 'ecmwf_ifs025',
+          value: comparisons.daily.temperature_2m_min_ecmwf_ifs025?.[d],
+        },
+        {
+          modelName: 'ICON-D2',
+          modelId: 'icon_d2',
+          value: comparisons.daily.temperature_2m_min_icon_d2?.[d],
+        },
+      ];
+
+      const rainItems = [
+        {
+          modelName: 'MeteoSwiss',
+          modelId: 'meteoswiss_icon_ch2',
+          value: comparisons.daily.precipitation_sum_meteoswiss_icon_ch2?.[d],
+        },
+        {
+          modelName: 'ECMWF',
+          modelId: 'ecmwf_ifs025',
+          value: comparisons.daily.precipitation_sum_ecmwf_ifs025?.[d],
+        },
+        {
+          modelName: 'ICON-D2',
+          modelId: 'icon_d2',
+          value: comparisons.daily.precipitation_sum_icon_d2?.[d],
+        },
+      ];
+
+      dayComparison = calculateDayModelComparison(maxItems, minItems, rainItems);
+    }
+
     daily.push({
       date: dateStr,
       dateLabel,
@@ -177,6 +287,7 @@ function normalizeWeatherData(
       windGustsMax: Math.round(forecast.daily.wind_gusts_10m_max[d]),
       pressureAvg,
       pressureTrend,
+      comparison: dayComparison,
       summaryText,
       hourly: dayHourly,
     });
@@ -243,6 +354,7 @@ function normalizeWeatherData(
     windGusts: Math.round(cur?.wind_gusts_10m ?? 0),
     relativeHumidity: currentHumidity,
     freezingLevel: firstHourly?.freezingLevel ?? 0,
+    comparison: firstHourly?.comparison,
   };
 
   // AirQuality
@@ -286,12 +398,19 @@ export function useWeatherData(location: Location, model: WeatherModel) {
   return useQuery({
     queryKey: ['weather', location.latitude, location.longitude, model],
     queryFn: async (): Promise<NormalizedWeatherData> => {
-      const [forecast, airQuality] = await Promise.all([
+      const [forecast, airQuality, comparisons] = await Promise.all([
         fetchForecast(location.latitude, location.longitude, model),
         fetchAirQuality(location.latitude, location.longitude),
+        fetchModelComparisons(location.latitude, location.longitude),
       ]);
 
-      return normalizeWeatherData(location, forecast, airQuality, model);
+      return normalizeWeatherData(
+        location,
+        forecast,
+        airQuality,
+        model,
+        comparisons
+      );
     },
     staleTime: 600000,
     gcTime: 3600000,

@@ -2,6 +2,10 @@ import * as SunCalc from 'suncalc';
 import { format } from 'date-fns';
 import type {
   MoonInfo,
+  MetricComparison,
+  RainComparison,
+  DayModelComparison,
+  HourlyModelComparison,
 } from '../types/weather.types';
 
 /**
@@ -225,3 +229,136 @@ export function generateDaySummaryText(
 
   return 'Cielo in prevalenza coperto o molto nuvoloso, ma senza precipitazioni significative.';
 }
+
+export function buildMetricComparison(
+  items: { modelName: string; modelId: string; value: number | null | undefined }[]
+): MetricComparison | null {
+  const valid = items.filter(
+    (i) => i.value !== null && i.value !== undefined && !isNaN(i.value)
+  ) as { modelName: string; modelId: string; value: number }[];
+
+  if (valid.length === 0) return null;
+
+  const valuesOnly = valid.map((i) => i.value);
+  const min = Math.min(...valuesOnly);
+  const max = Math.max(...valuesOnly);
+  const spread = Math.round((max - min) * 10) / 10;
+
+  let agreement: 'Alta' | 'Media' | 'Bassa' = 'Alta';
+  if (spread > 3.0) {
+    agreement = 'Bassa';
+  } else if (spread > 1.5) {
+    agreement = 'Media';
+  }
+
+  return {
+    values: valid.map((v) => ({ ...v, value: Math.round(v.value * 10) / 10 })),
+    min: Math.round(min * 10) / 10,
+    max: Math.round(max * 10) / 10,
+    spread,
+    agreement,
+  };
+}
+
+export function buildRainComparison(
+  items: { modelName: string; modelId: string; value: number | null | undefined }[]
+): RainComparison | null {
+  const valid = items.filter(
+    (i) => i.value !== null && i.value !== undefined && !isNaN(i.value)
+  ) as { modelName: string; modelId: string; value: number }[];
+
+  if (valid.length === 0) return null;
+
+  const wetCount = valid.filter((i) => i.value >= 0.2).length;
+  const total = valid.length;
+  const wetRatio = wetCount / total;
+  const concordanceRatio = Math.max(wetRatio, 1 - wetRatio);
+  const concordancePct = Math.round(concordanceRatio * 100);
+
+  let concordanceLabel = 'Tutti concordi: asciutto';
+  if (wetCount === total) {
+    concordanceLabel = 'Tutti concordi: pioggia';
+  } else if (wetCount === 0) {
+    concordanceLabel = 'Tutti concordi: asciutto';
+  } else if (wetCount > total / 2) {
+    concordanceLabel = `${wetCount}/${total} modelli prevedono pioggia`;
+  } else {
+    concordanceLabel = `${total - wetCount}/${total} modelli prevedono asciutto`;
+  }
+
+  return {
+    values: valid.map((v) => ({ ...v, value: Math.round(v.value * 10) / 10 })),
+    wetModelsCount: wetCount,
+    totalModelsCount: total,
+    concordancePct,
+    concordanceLabel,
+  };
+}
+
+export function calculateDayModelComparison(
+  tempMaxItems: { modelName: string; modelId: string; value: number | null | undefined }[],
+  tempMinItems: { modelName: string; modelId: string; value: number | null | undefined }[],
+  rainItems: { modelName: string; modelId: string; value: number | null | undefined }[]
+): DayModelComparison | undefined {
+  const tempMax = buildMetricComparison(tempMaxItems);
+  const tempMin = buildMetricComparison(tempMinItems);
+  const rain = buildRainComparison(rainItems);
+
+  if (!tempMax || !tempMin || !rain) return undefined;
+
+  let score = 100 - tempMax.spread * 12 - tempMin.spread * 8 - (100 - rain.concordancePct) * 0.4;
+  score = Math.max(25, Math.min(99, Math.round(score)));
+
+  let overallReliability: 'Alta' | 'Media' | 'Bassa' = 'Alta';
+  let colorClass = 'text-emerald-400';
+
+  if (score < 60 || tempMax.spread > 3.0) {
+    overallReliability = 'Bassa';
+    colorClass = 'text-orange-400';
+  } else if (score < 80 || tempMax.spread > 1.6) {
+    overallReliability = 'Media';
+    colorClass = 'text-yellow-400';
+  }
+
+  return {
+    tempMax,
+    tempMin,
+    rain,
+    overallReliability,
+    overallScore: score,
+    colorClass,
+  };
+}
+
+export function calculateHourlyModelComparison(
+  tempItems: { modelName: string; modelId: string; value: number | null | undefined }[],
+  rainItems: { modelName: string; modelId: string; value: number | null | undefined }[]
+): HourlyModelComparison | undefined {
+  const temperature = buildMetricComparison(tempItems);
+  const rain = buildRainComparison(rainItems);
+
+  if (!temperature || !rain) return undefined;
+
+  let score = 100 - temperature.spread * 15 - (100 - rain.concordancePct) * 0.35;
+  score = Math.max(30, Math.min(99, Math.round(score)));
+
+  let overallReliability: 'Alta' | 'Media' | 'Bassa' = 'Alta';
+  let dotColorClass = 'bg-emerald-400';
+
+  if (score < 65 || temperature.spread > 2.5) {
+    overallReliability = 'Bassa';
+    dotColorClass = 'bg-orange-400';
+  } else if (score < 82 || temperature.spread > 1.4) {
+    overallReliability = 'Media';
+    dotColorClass = 'bg-yellow-400';
+  }
+
+  return {
+    temperature,
+    rain,
+    overallReliability,
+    overallScore: score,
+    dotColorClass,
+  };
+}
+
