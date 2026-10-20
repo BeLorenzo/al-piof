@@ -217,6 +217,63 @@ export interface MoonInfo {
   moonset: string; // "07:15" or "--:--"
 }
 
+export type AppTheme =
+  | 'dynamic'
+  | 'oled'
+  | 'light'
+  | 'warm_paper'
+  | 'rose_milk'
+  | 'cyberpink'
+  | 'forest'
+  | 'ocean'
+  | 'slate'
+  | 'swiss'
+  | 'custom';
+
+export type AccentColor =
+  | 'sky'
+  | 'pink'
+  | 'emerald'
+  | 'amber'
+  | 'violet'
+  | 'rose'
+  | 'custom';
+
+export type AppFont = 'technical' | 'mono' | 'serif' | 'rounded' | 'editorial' | 'system';
+export type TempUnit = 'celsius' | 'fahrenheit';
+export type WindUnit = 'kmh' | 'ms' | 'knots';
+export type SurfaceStyle = 'glass' | 'flat' | 'contrast';
+
+export type BentoCardId =
+  | 'visibility'
+  | 'cloudSun'
+  | 'airQuality'
+  | 'pressureDew'
+  | 'wind'
+  | 'humidity'
+  | 'uv'
+  | 'sunMoon'
+  | 'freezingLevel';
+
+export interface UserPreferences {
+  theme: AppTheme;
+  customBgColor: string;
+  accentColor: AccentColor;
+  customAccentColor: string;
+  font: AppFont;
+  surfaceStyle: SurfaceStyle;
+  useEnsembleAverageInBlend: boolean;
+  roundTemperatures: boolean;
+  windUnit: WindUnit;
+  defaultFilterFromNow: boolean;
+  compactHourlyRows: boolean;
+  showTextSummary: boolean;
+  showModelComparison: boolean;
+  showHistoricalAlmanac: boolean;
+  showBottomRadarPreview: boolean;
+  visibleBentoCards: BentoCardId[];
+}
+
 export interface DailyForecastData {
   date: string; // "YYYY-MM-DD"
   dateLabel: string; // e.g. "Lun 19 Ott"
@@ -229,6 +286,15 @@ export interface DailyForecastData {
   apparentTempMin: number;
   dewPointMax: number;
   dewPointMin: number;
+  humidityAvg: number;
+  visibilityMin: number;
+  cloudCoverAvg: number;
+  freezingLevelMax: number;
+  freezingLevelMin: number;
+  airQualityEaqi: number | null;
+  airQualityLabel: string | null;
+  airQualityColor: string | null;
+  windDirectionDominant: number;
   sunrise: string;
   sunset: string;
   moon: MoonInfo;
@@ -255,6 +321,7 @@ export interface CurrentWeatherData {
   isDay: boolean;
   precipitation: number;
   cloudCover: number;
+  visibility: number;
   surfacePressure: number;
   pressureTrend: 'rising' | 'falling' | 'steady';
   windSpeed: number;

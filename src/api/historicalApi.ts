@@ -5,17 +5,25 @@ import type {
 
 const ARCHIVE_API_URL = 'https://archive-api.open-meteo.com/v1/archive';
 
+// In-memory cache per coordinate e data per azzerare chiamate ripetute
+const almanacCache = new Map<string, HistoricalAlmanacData>();
+
 export async function fetchHistoricalAlmanac(
   latitude: number,
   longitude: number,
   selectedDateStr: string, // "YYYY-MM-DD"
   currentForecastMax: number
-): Promise<HistoricalAlmanacData> {
+): Promise<HistoricalAlmanacData | null> {
+  const cacheKey = `${latitude.toFixed(2)}_${longitude.toFixed(2)}_${selectedDateStr}`;
+  if (almanacCache.has(cacheKey)) {
+    return almanacCache.get(cacheKey)!;
+  }
+
   const parts = selectedDateStr.split('-');
   const currentYear = parseInt(parts[0], 10);
   const monthDay = `${parts[1]}-${parts[2]}`;
 
-  // Past 5 years
+  // Ultimi 5 anni
   const targetYears = [1, 2, 3, 4, 5].map((offset) => currentYear - offset);
 
   const fetchYear = async (
@@ -55,39 +63,45 @@ export async function fetchHistoricalAlmanac(
     }
   };
 
-  const results = await Promise.all(
-    targetYears.map((yr, idx) => fetchYear(yr, idx + 1))
-  );
+  try {
+    const results = await Promise.all(
+      targetYears.map((yr, idx) => fetchYear(yr, idx + 1))
+    );
 
-  const validRecords = results.filter((r): r is HistoricalYearRecord => r !== null);
+    const validRecords = results.filter((r): r is HistoricalYearRecord => r !== null);
+    if (validRecords.length === 0) {
+      return null;
+    }
 
-  const avgTempMax =
-    validRecords.length > 0
-      ? Math.round(
-          (validRecords.reduce((acc, r) => acc + r.tempMax, 0) /
-            validRecords.length) *
-            10
-        ) / 10
-      : currentForecastMax;
+    const avgTempMax =
+      Math.round(
+        (validRecords.reduce((acc, r) => acc + r.tempMax, 0) /
+          validRecords.length) *
+          10
+      ) / 10;
 
-  const avgTempMin =
-    validRecords.length > 0
-      ? Math.round(
-          (validRecords.reduce((acc, r) => acc + r.tempMin, 0) /
-            validRecords.length) *
-            10
-        ) / 10
-      : 10;
+    const avgTempMin =
+      Math.round(
+        (validRecords.reduce((acc, r) => acc + r.tempMin, 0) /
+          validRecords.length) *
+          10
+      ) / 10;
 
-  const tempMaxAnomaly =
-    Math.round((currentForecastMax - avgTempMax) * 10) / 10;
+    const tempMaxAnomaly =
+      Math.round((currentForecastMax - avgTempMax) * 10) / 10;
 
-  return {
-    referenceDate: selectedDateStr,
-    avgTempMax,
-    avgTempMin,
-    currentTempMax: currentForecastMax,
-    tempMaxAnomaly,
-    records: validRecords,
-  };
+    const result: HistoricalAlmanacData = {
+      referenceDate: selectedDateStr,
+      avgTempMax,
+      avgTempMin,
+      currentTempMax: currentForecastMax,
+      tempMaxAnomaly,
+      records: validRecords,
+    };
+
+    almanacCache.set(cacheKey, result);
+    return result;
+  } catch {
+    return null;
+  }
 }

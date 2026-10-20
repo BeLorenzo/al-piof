@@ -6,7 +6,28 @@ import type {
   RainComparison,
   DayModelComparison,
   HourlyModelComparison,
+  WindUnit,
 } from '../types/weather.types';
+
+export function formatTemperature(temp: number, round: boolean = false): string {
+  if (round) {
+    return `${Math.round(temp)}°`;
+  }
+  const rounded = Math.round(temp * 10) / 10;
+  return `${rounded}°`;
+}
+
+export function formatWindSpeed(speedKmh: number, unit: WindUnit = 'kmh'): string {
+  switch (unit) {
+    case 'ms':
+      return `${(speedKmh / 3.6).toFixed(1)} m/s`;
+    case 'knots':
+      return `${(speedKmh / 1.852).toFixed(1)} kn`;
+    case 'kmh':
+    default:
+      return `${Math.round(speedKmh)} km/h`;
+  }
+}
 
 /**
  * Trigonometric circular mean for wind directions (degrees 0-360)
@@ -237,7 +258,8 @@ export function buildMetricComparison(
     (i) => i.value !== null && i.value !== undefined && !isNaN(i.value)
   ) as { modelName: string; modelId: string; value: number }[];
 
-  if (valid.length === 0) return null;
+  // Servono almeno 2 modelli validi per poter calcolare uno spread e un accordo
+  if (valid.length < 2) return null;
 
   const valuesOnly = valid.map((i) => i.value);
   const min = Math.min(...valuesOnly);
@@ -269,7 +291,8 @@ export function buildRainComparison(
     (i) => i.value !== null && i.value !== undefined && !isNaN(i.value)
   ) as { modelName: string; modelId: string; value: number }[];
 
-  if (valid.length === 0) return null;
+  // Servono almeno 2 modelli validi per calcolare la concordanza pioggia
+  if (valid.length < 2) return null;
 
   const total = valid.length;
   const maxRain = Math.max(...valid.map((i) => i.value));

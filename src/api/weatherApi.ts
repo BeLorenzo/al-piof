@@ -80,24 +80,34 @@ export interface RawModelComparisonsResponse {
     time: string[];
     temperature_2m_meteoswiss_icon_ch2?: number[];
     temperature_2m_ecmwf_ifs025?: number[];
+    temperature_2m_icon_seamless?: number[];
     temperature_2m_icon_d2?: number[];
+    temperature_2m?: number[];
     precipitation_meteoswiss_icon_ch2?: number[];
     precipitation_ecmwf_ifs025?: number[];
+    precipitation_icon_seamless?: number[];
     precipitation_icon_d2?: number[];
-    [key: string]: any;
+    precipitation?: number[];
+    [key: string]: unknown;
   };
   daily?: {
     time: string[];
     temperature_2m_max_meteoswiss_icon_ch2?: number[];
     temperature_2m_max_ecmwf_ifs025?: number[];
+    temperature_2m_max_icon_seamless?: number[];
     temperature_2m_max_icon_d2?: number[];
+    temperature_2m_max?: number[];
     temperature_2m_min_meteoswiss_icon_ch2?: number[];
     temperature_2m_min_ecmwf_ifs025?: number[];
+    temperature_2m_min_icon_seamless?: number[];
     temperature_2m_min_icon_d2?: number[];
+    temperature_2m_min?: number[];
     precipitation_sum_meteoswiss_icon_ch2?: number[];
     precipitation_sum_ecmwf_ifs025?: number[];
+    precipitation_sum_icon_seamless?: number[];
     precipitation_sum_icon_d2?: number[];
-    [key: string]: any;
+    precipitation_sum?: number[];
+    [key: string]: unknown;
   };
 }
 
@@ -105,26 +115,37 @@ export async function fetchModelComparisons(
   latitude: number,
   longitude: number
 ): Promise<RawModelComparisonsResponse | null> {
-  try {
-    const params = new URLSearchParams({
-      latitude: latitude.toString(),
-      longitude: longitude.toString(),
-      models: 'meteoswiss_icon_ch2,ecmwf_ifs025,icon_d2',
-      timezone: 'auto',
-      forecast_days: '7',
-      hourly: 'temperature_2m,precipitation',
-      daily: 'temperature_2m_max,temperature_2m_min,precipitation_sum',
-    });
+  const params = new URLSearchParams({
+    latitude: latitude.toString(),
+    longitude: longitude.toString(),
+    models: 'meteoswiss_icon_ch2,ecmwf_ifs025,icon_seamless',
+    timezone: 'auto',
+    forecast_days: '7',
+    hourly: 'temperature_2m,precipitation',
+    daily: 'temperature_2m_max,temperature_2m_min,precipitation_sum',
+  });
 
-    const response = await fetch(`${OPEN_METEO_FORECAST_URL}?${params.toString()}`);
-    if (!response.ok) {
-      console.warn('Impossibile scaricare confronto modelli:', response.status);
-      return null;
+  const url = `${OPEN_METEO_FORECAST_URL}?${params.toString()}`;
+
+  // Tentativo con 1 retry leggero per evitare che spike momentanei disattivino il confronto
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const response = await fetch(url);
+      if (response.ok) {
+        return await response.json();
+      }
+      if (response.status >= 400 && response.status < 500 && response.status !== 429) {
+        // Errore client permanente, non fare retry
+        break;
+      }
+    } catch {
+      // In caso di errore di rete, attendi brevemente prima del secondo tentativo
+      if (attempt === 0) {
+        await new Promise((resolve) => setTimeout(resolve, 350));
+      }
     }
-    return await response.json();
-  } catch (err) {
-    console.warn('Errore di rete durante il confronto modelli:', err);
-    return null;
   }
-}
 
+  console.warn('Confronto modelli non disponibile per queste coordinate.');
+  return null;
+}

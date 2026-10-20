@@ -3,6 +3,8 @@ import { useQuery } from '@tanstack/react-query';
 import { History, TrendingUp, TrendingDown, CloudRain, Loader2 } from 'lucide-react';
 import { fetchHistoricalAlmanac } from '../../api/historicalApi';
 import { getWmoInfo } from '../../utils/wmoCodes';
+import { formatTemperature } from '../../utils/meteoMath';
+import { useAppStore } from '../../store/useAppStore';
 
 interface HistoricalComparisonCardProps {
   latitude: number;
@@ -17,16 +19,21 @@ export const HistoricalComparisonCard: React.FC<HistoricalComparisonCardProps> =
   selectedDate,
   currentTempMax,
 }) => {
+  const preferences = useAppStore((state) => state.preferences);
+
   const { data, isLoading } = useQuery({
     queryKey: ['almanac', latitude, longitude, selectedDate, currentTempMax],
     queryFn: () =>
       fetchHistoricalAlmanac(latitude, longitude, selectedDate, currentTempMax),
+    enabled: preferences.showHistoricalAlmanac,
     staleTime: 1000 * 60 * 60 * 24, // 24 hours
   });
 
+  if (!preferences.showHistoricalAlmanac) return null;
+
   if (isLoading) {
     return (
-      <div className="mx-4 my-3 p-4 bg-slate-900/50 border border-slate-800/80 rounded-2xl flex items-center justify-center gap-2 text-xs text-slate-400">
+      <div className="mx-4 my-3 p-4 bg-slate-900/50 border border-slate-800/80 rounded-2xl flex items-center justify-center gap-2 text-xs text-slate-400 card-surface">
         <Loader2 className="w-4 h-4 animate-spin text-sky-400" />
         <span>Consultazione almanacco storico (2021-2025)...</span>
       </div>
@@ -38,7 +45,7 @@ export const HistoricalComparisonCard: React.FC<HistoricalComparisonCardProps> =
   const isWarmer = data.tempMaxAnomaly >= 0;
 
   return (
-    <div className="mx-4 my-3 p-4 bg-slate-900/70 border border-slate-800/90 rounded-3xl shadow-xl backdrop-blur-md space-y-3">
+    <div className="mx-4 my-3 p-4 bg-slate-900/70 border border-slate-800/90 rounded-3xl shadow-xl backdrop-blur-md space-y-3 card-surface">
       {/* Title & Anomaly Badge */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
@@ -57,7 +64,7 @@ export const HistoricalComparisonCard: React.FC<HistoricalComparisonCardProps> =
 
         {/* Anomaly Badge */}
         <div
-          className={`flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-bold border ${
+          className={`flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-bold border num-tabular ${
             isWarmer
               ? 'bg-rose-950/60 border-rose-800/80 text-rose-300'
               : 'bg-cyan-950/60 border-cyan-800/80 text-cyan-300'
@@ -75,12 +82,14 @@ export const HistoricalComparisonCard: React.FC<HistoricalComparisonCardProps> =
       </div>
 
       {/* Subtitle info */}
-      <div className="text-[11px] text-slate-400">
-        Media max quinquennio: <span className="text-slate-200 font-semibold">{data.avgTempMax}°C</span> (oggi prevista <span className="text-white font-bold">{currentTempMax}°C</span>)
+      <div className="text-[11px] text-slate-400 num-tabular">
+        Media max quinquennio:{' '}
+        <span className="text-slate-200 font-semibold">{data.avgTempMax}°C</span> (oggi prevista{' '}
+        <span className="text-white font-bold">{currentTempMax}°C</span>)
       </div>
 
       {/* Comparative Mini-Cards */}
-      <div className="grid grid-cols-5 gap-1.5 pt-1">
+      <div className="grid grid-cols-5 gap-1.5 pt-1 num-tabular">
         {data.records.map((rec) => {
           const wmo = getWmoInfo(rec.weatherCode, true);
           const WmoIcon = wmo.icon;
@@ -102,10 +111,10 @@ export const HistoricalComparisonCard: React.FC<HistoricalComparisonCardProps> =
               </div>
 
               <div className="text-[11px] font-bold text-white tracking-tight leading-tight mt-1">
-                {rec.tempMax}°
+                {formatTemperature(rec.tempMax, preferences.roundTemperatures)}
               </div>
               <div className="text-[9px] text-slate-400 leading-tight">
-                {rec.tempMin}°
+                {formatTemperature(rec.tempMin, preferences.roundTemperatures)}
               </div>
 
               {rec.precipitation > 0 ? (

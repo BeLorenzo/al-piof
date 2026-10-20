@@ -1,13 +1,43 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Droplets, Thermometer, Wind } from 'lucide-react';
+import { useAppStore } from '../../store/useAppStore';
+import { formatTemperature, formatWindSpeed } from '../../utils/meteoMath';
+import { HourlyChartSvg } from './HourlyChartSvg';
 import type { HourlyRowData } from '../../types/weather.types';
 
 interface HourlyChartProps {
   hourly: HourlyRowData[];
+  isToday?: boolean;
 }
 
-export const HourlyChart: React.FC<HourlyChartProps> = ({ hourly }) => {
-  const [activeHourIndex, setActiveHourIndex] = useState<number | null>(null);
+export const HourlyChart: React.FC<HourlyChartProps> = ({ hourly, isToday = false }) => {
+  const preferences = useAppStore((state) => state.preferences);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const currentHourNum = new Date().getHours();
+  const [activeHourIndex, setActiveHourIndex] = useState<number | null>(
+    isToday ? Math.min(currentHourNum, hourly.length - 1) : null
+  );
+
+  const svgWidth = 840;
+  const svgHeight = 260;
+  const paddingX = 35;
+  const tempTop = 25;
+  const tempBottom = 155;
+  const tempPlotHeight = tempBottom - tempTop;
+  const rainBaseline = 225;
+  const maxBarHeight = 36;
+
+  // Auto-scroll to current hour on mount if today
+  useEffect(() => {
+    if (isToday && scrollContainerRef.current) {
+      const currentX =
+        paddingX + (currentHourNum / Math.max(1, hourly.length - 1)) * (svgWidth - paddingX * 2);
+      scrollContainerRef.current.scrollTo({
+        left: Math.max(0, currentX - 160),
+        behavior: 'smooth',
+      });
+    }
+  }, [isToday, currentHourNum, hourly.length]);
 
   if (!hourly || hourly.length === 0) return null;
 
@@ -15,22 +45,7 @@ export const HourlyChart: React.FC<HourlyChartProps> = ({ hourly }) => {
   const minTemp = Math.min(...temps);
   const maxTemp = Math.max(...temps);
   const tempRange = Math.max(1, maxTemp - minTemp);
-
   const maxRain = Math.max(1, ...hourly.map((h) => h.precipitation));
-
-  // SVG dimensions: separate Upper Temperature zone from Lower Rain zone
-  const svgWidth = 840;
-  const svgHeight = 260;
-  const paddingX = 35;
-
-  // Temperature lane: y from 25 to 155 (height 130px)
-  const tempTop = 25;
-  const tempBottom = 155;
-  const tempPlotHeight = tempBottom - tempTop;
-
-  // Rain lane: baseline at y = 225, max bar height 38px (y from 187 to 225)
-  const rainBaseline = 225;
-  const maxBarHeight = 36;
 
   // Generate points for the temperature line
   const points = hourly.map((h, i) => {
@@ -43,6 +58,7 @@ export const HourlyChart: React.FC<HourlyChartProps> = ({ hourly }) => {
       y,
       temp: h.temperature,
       hour: h.hour,
+      hourNum: parseInt(h.hour.split(':')[0], 10),
       rain: h.precipitation,
       windSpeed: h.windSpeed,
     };
@@ -53,183 +69,73 @@ export const HourlyChart: React.FC<HourlyChartProps> = ({ hourly }) => {
   }, '');
 
   const areaD = `${pathD} L ${points[points.length - 1].x} ${tempBottom} L ${points[0].x} ${tempBottom} Z`;
-
   const activePoint = activeHourIndex !== null ? points[activeHourIndex] : null;
+  const currentHourPoint = isToday
+    ? points.find((p) => p.hourNum === currentHourNum) || null
+    : null;
 
   return (
-    <div className="w-full bg-slate-950 px-4 py-3 space-y-2">
+    <div className="w-full px-4 py-3 space-y-2">
       <div className="flex items-center justify-between text-xs">
         <div className="flex items-center gap-1.5 text-slate-300 font-semibold">
           <Thermometer className="w-4 h-4 text-amber-400" />
-          <span>Andamento Orario Separato (Temp &amp; Pioggia)</span>
+          <span>Andamento Orario (Temp &amp; Pioggia)</span>
         </div>
         <div className="flex items-center gap-3 text-slate-400 text-[11px]">
           <span className="flex items-center gap-1">
             <span className="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block" />
-            <span>Temp (°C)</span>
+            <span>Temp</span>
           </span>
           <span className="flex items-center gap-1">
             <span className="w-2.5 h-2.5 rounded-sm bg-cyan-500 inline-block" />
-            <span>Pioggia (mm)</span>
+            <span>Pioggia</span>
           </span>
         </div>
       </div>
 
       {/* Active inspector banner if user taps a point */}
       {activePoint && (
-        <div className="px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-xl flex items-center justify-between text-xs text-slate-300 animate-fade-in">
+        <div className="px-3 py-2 bg-slate-900 border border-slate-800 rounded-2xl flex items-center justify-between text-xs text-slate-300 animate-fade-in card-surface num-tabular">
           <span className="font-bold text-sky-400">Ore {activePoint.hour}:</span>
-          <span className="text-white font-semibold">{activePoint.temp}°C</span>
+          <span className="text-white font-bold">
+            {formatTemperature(activePoint.temp, preferences.roundTemperatures)}
+          </span>
           <span className="text-cyan-300">
             Pioggia: {activePoint.rain > 0 ? `${activePoint.rain} mm` : '0 mm'}
           </span>
           <span className="text-slate-400 flex items-center gap-1">
             <Wind className="w-3 h-3 text-slate-400" />
-            {activePoint.windSpeed} km/h
+            {formatWindSpeed(activePoint.windSpeed, preferences.windUnit)}
           </span>
         </div>
       )}
 
       {/* Horizontally scrollable SVG chart container */}
-      <div className="overflow-x-auto no-scrollbar bg-slate-900/60 border border-slate-800/80 rounded-2xl p-2 select-none">
-        <svg
-          viewBox={`0 0 ${svgWidth} ${svgHeight}`}
-          className="w-[840px] h-[260px] overflow-visible"
-        >
-          <defs>
-            <linearGradient id="tempGradient2" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.25" />
-              <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.0" />
-            </linearGradient>
-          </defs>
+      <HourlyChartSvg
+        points={points}
+        pathD={pathD}
+        areaD={areaD}
+        currentHourPoint={currentHourPoint}
+        activeHourIndex={activeHourIndex}
+        setActiveHourIndex={setActiveHourIndex}
+        maxRain={maxRain}
+        preferences={preferences}
+        svgWidth={svgWidth}
+        svgHeight={svgHeight}
+        paddingX={paddingX}
+        tempTop={tempTop}
+        tempBottom={tempBottom}
+        rainBaseline={rainBaseline}
+        maxBarHeight={maxBarHeight}
+        scrollContainerRef={scrollContainerRef}
+      />
 
-          {/* Separator line between temperature area and rain lane */}
-          <line
-            x1={paddingX}
-            y1={tempBottom + 12}
-            x2={svgWidth - paddingX}
-            y2={tempBottom + 12}
-            stroke="#1e293b"
-            strokeDasharray="4 4"
-            strokeWidth="1"
-          />
-
-          {/* Area fill under temperature line */}
-          <path d={areaD} fill="url(#tempGradient2)" />
-
-          {/* Temperature Line */}
-          <path
-            d={pathD}
-            fill="none"
-            stroke="#f59e0b"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-
-          {/* Rain Bars & Labels in dedicated bottom lane */}
-          {points.map((pt) => {
-            const barHeight = pt.rain > 0 ? Math.max(4, (pt.rain / maxRain) * maxBarHeight) : 0;
-            const barY = rainBaseline - barHeight;
-            const showRainText = pt.rain >= 0.5;
-
-            return (
-              <g key={`rain-${pt.hour}`}>
-                {pt.rain > 0 && (
-                  <>
-                    <rect
-                      x={pt.x - 6}
-                      y={barY}
-                      width={12}
-                      height={barHeight}
-                      rx={2}
-                      className={pt.rain >= 3 ? 'fill-blue-500' : 'fill-cyan-400/80'}
-                    />
-                    {showRainText && (
-                      <text
-                        x={pt.x}
-                        y={barY - 3}
-                        textAnchor="middle"
-                        className="fill-cyan-300 text-[9px] font-bold"
-                      >
-                        {pt.rain}
-                      </text>
-                    )}
-                  </>
-                )}
-              </g>
-            );
-          })}
-
-          {/* Temperature Dots & Spaced Labels */}
-          {points.map((pt, i) => {
-            // Space labels every 3 hours (00, 03, 06, 09, 12, 15, 18, 21, 23)
-            const showLabel = i % 3 === 0 || i === points.length - 1;
-            const isActive = activeHourIndex === i;
-
-            return (
-              <g
-                key={`pt-${pt.hour}`}
-                className="cursor-pointer"
-                onClick={() => setActiveHourIndex(i)}
-              >
-                {/* Touch hit area */}
-                <rect
-                  x={pt.x - 15}
-                  y={0}
-                  width={30}
-                  height={svgHeight}
-                  fill="transparent"
-                />
-
-                {/* Temp dot */}
-                <circle
-                  cx={pt.x}
-                  cy={pt.y}
-                  r={isActive ? 5 : 3}
-                  className={
-                    isActive
-                      ? 'fill-white stroke-sky-400'
-                      : 'fill-slate-950 stroke-amber-400'
-                  }
-                  strokeWidth="2"
-                />
-
-                {/* Temp Label above dot (strictly above y - 6) */}
-                {showLabel && (
-                  <text
-                    x={pt.x}
-                    y={pt.y - 7}
-                    textAnchor="middle"
-                    className="fill-slate-200 text-[10px] font-bold"
-                  >
-                    {pt.temp}°
-                  </text>
-                )}
-
-                {/* Hour label below rain lane */}
-                {showLabel && (
-                  <text
-                    x={pt.x}
-                    y={svgHeight - 8}
-                    textAnchor="middle"
-                    className="fill-slate-400 text-[10px]"
-                  >
-                    {pt.hour}
-                  </text>
-                )}
-              </g>
-            );
-          })}
-        </svg>
-      </div>
-
-      <div className="flex items-center justify-between text-[11px] text-slate-500 px-1">
-        <span>Minima: <strong className="text-slate-300">{minTemp}°</strong></span>
-        <span>Massima: <strong className="text-slate-300">{maxTemp}°</strong></span>
+      <div className="flex items-center justify-between text-[11px] text-slate-500 px-1 num-tabular">
+        <span>Minima: <strong className="text-slate-300">{formatTemperature(minTemp, preferences.roundTemperatures)}</strong></span>
+        <span>Massima: <strong className="text-slate-300">{formatTemperature(maxTemp, preferences.roundTemperatures)}</strong></span>
         <span className="text-slate-400 flex items-center gap-1">
           <Droplets className="w-3 h-3 text-cyan-400" />
-          <span>Tocca qualsiasi punto per dettagli ora per ora</span>
+          <span>Tocca un punto per dettagli</span>
         </span>
       </div>
     </div>

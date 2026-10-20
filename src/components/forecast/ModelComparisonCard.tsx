@@ -15,10 +15,10 @@ export const ModelComparisonCard: React.FC<ModelComparisonCardProps> = ({
 
   if (!comparison) {
     return (
-      <div className="p-3 rounded-2xl bg-slate-900/50 border border-slate-800/60 text-xs text-slate-400 flex items-center justify-between">
+      <div className="p-3 rounded-2xl bg-slate-900/50 border border-slate-800/60 text-xs text-slate-400 flex items-center justify-between card-surface">
         <div className="flex items-center gap-2">
           <Scale className="w-4 h-4 text-slate-500" />
-          <span>Confronto modelli: orizzonte oltre i 5 giorni (solo modello base attivo)</span>
+          <span>Confronto modelli: solo modello base attivo per questa data</span>
         </div>
       </div>
     );
@@ -34,7 +34,7 @@ export const ModelComparisonCard: React.FC<ModelComparisonCardProps> = ({
       : AlertCircle;
 
   return (
-    <div className="overflow-hidden rounded-2xl bg-slate-900/75 border border-slate-800/80 shadow-lg backdrop-blur-md transition-all">
+    <div className="overflow-hidden rounded-2xl bg-slate-900/75 border border-slate-800/80 shadow-lg backdrop-blur-md transition-all card-surface">
       {/* Header clickable button */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
@@ -49,7 +49,7 @@ export const ModelComparisonCard: React.FC<ModelComparisonCardProps> = ({
             <div className="text-xs font-semibold text-slate-200 flex items-center gap-2">
               <span>Affidabilità Modelli Meteo</span>
               <span
-                className={`text-[10px] px-1.5 py-0.5 rounded-md font-bold flex items-center gap-1 ${
+                className={`text-[10px] px-1.5 py-0.5 rounded-md font-bold flex items-center gap-1 num-tabular ${
                   overallReliability === 'Alta'
                     ? 'bg-emerald-950/70 text-emerald-400 border border-emerald-800/80'
                     : overallReliability === 'Media'
@@ -62,7 +62,7 @@ export const ModelComparisonCard: React.FC<ModelComparisonCardProps> = ({
               </span>
             </div>
             <div className="text-[11px] text-slate-400 mt-0.5 flex items-center gap-1.5 flex-wrap">
-              <span>Confronto MeteoSwiss, ECMWF e ICON-D2 per {dayName}</span>
+              <span>MeteoSwiss, ECMWF e ICON per {dayName}</span>
               {comparison.leadTimeHorizon && (
                 <span className="text-[10px] text-sky-400 font-medium">
                   &bull; {comparison.leadTimeHorizon}
@@ -84,72 +84,76 @@ export const ModelComparisonCard: React.FC<ModelComparisonCardProps> = ({
         </div>
       </button>
 
-      {/* Expanded Comparison Breakdown */}
+      {/* Expanded Clean Tabular Breakdown (No nested card-ception) */}
       {isExpanded && (
         <div className="px-3 pb-3 pt-2 border-t border-slate-800/60 space-y-2.5 text-xs animate-fade-in bg-slate-950/40">
           {/* Horizon info note */}
-          <div className="px-3 py-1.5 rounded-xl bg-slate-900/80 border border-slate-800/80 flex items-center justify-between text-[11px]">
-            <span className="text-slate-400">Orizzonte temporale:</span>
+          <div className="px-3 py-1.5 rounded-xl bg-slate-900/60 border border-slate-800/80 flex items-center justify-between text-[11px]">
+            <span className="text-slate-400">Orizzonte previsionale:</span>
             <span className="font-semibold text-sky-300">{comparison.leadTimeHorizon}</span>
           </div>
 
           {/* 1. Temp Max Comparison */}
-          <div className="p-2.5 rounded-xl bg-slate-900/60 border border-slate-800/70">
-            <div className="flex items-center justify-between mb-1.5">
+          <div className="p-2.5 rounded-xl bg-slate-900/40 border border-slate-800/70">
+            <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-1.5 font-semibold text-slate-200">
                 <Thermometer className="w-3.5 h-3.5 text-rose-400" />
                 <span>Temperatura Massima</span>
               </div>
-              <div className="text-[11px] font-medium text-slate-400">
+              <div className="text-[11px] font-medium text-slate-400 num-tabular">
                 Spread: <strong className="text-white">&Delta; {tempMax.spread}&deg;C</strong> ({tempMax.agreement})
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-1.5 text-center">
+
+            <div className="grid grid-cols-3 gap-2 text-center num-tabular">
               {tempMax.values.map((v) => (
-                <div key={v.modelId} className="p-1.5 rounded-lg bg-slate-950/60 border border-slate-800/80">
+                <div key={v.modelId} className="p-1.5 rounded-lg bg-slate-950/50 border border-slate-800/70">
                   <div className="text-[10px] text-slate-400 font-medium truncate">{v.modelName}</div>
                   <div className="text-sm font-bold text-slate-100">{v.value}&deg;C</div>
                 </div>
               ))}
             </div>
+
             {tempMax.average != null && (
-              <div className="mt-1.5 py-1 px-2 rounded-lg bg-rose-950/40 border border-rose-800/40 text-[10px] text-rose-300 flex items-center justify-between">
-                <span>Media applicata:</span>
+              <div className="mt-2 py-1 px-2.5 rounded-lg bg-rose-950/30 border border-rose-800/30 text-[10px] text-rose-300 flex items-center justify-between num-tabular">
+                <span>Media calcolata (se Blend attivo):</span>
                 <span className="font-bold text-xs">{tempMax.average}&deg;C</span>
               </div>
             )}
           </div>
 
           {/* 2. Temp Min Comparison */}
-          <div className="p-2.5 rounded-xl bg-slate-900/60 border border-slate-800/70">
-            <div className="flex items-center justify-between mb-1.5">
+          <div className="p-2.5 rounded-xl bg-slate-900/40 border border-slate-800/70">
+            <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-1.5 font-semibold text-slate-200">
                 <Thermometer className="w-3.5 h-3.5 text-sky-400" />
                 <span>Temperatura Minima</span>
               </div>
-              <div className="text-[11px] font-medium text-slate-400">
+              <div className="text-[11px] font-medium text-slate-400 num-tabular">
                 Spread: <strong className="text-white">&Delta; {tempMin.spread}&deg;C</strong> ({tempMin.agreement})
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-1.5 text-center">
+
+            <div className="grid grid-cols-3 gap-2 text-center num-tabular">
               {tempMin.values.map((v) => (
-                <div key={v.modelId} className="p-1.5 rounded-lg bg-slate-950/60 border border-slate-800/80">
+                <div key={v.modelId} className="p-1.5 rounded-lg bg-slate-950/50 border border-slate-800/70">
                   <div className="text-[10px] text-slate-400 font-medium truncate">{v.modelName}</div>
                   <div className="text-sm font-bold text-slate-100">{v.value}&deg;C</div>
                 </div>
               ))}
             </div>
+
             {tempMin.average != null && (
-              <div className="mt-1.5 py-1 px-2 rounded-lg bg-sky-950/40 border border-sky-800/40 text-[10px] text-sky-300 flex items-center justify-between">
-                <span>Media applicata:</span>
+              <div className="mt-2 py-1 px-2.5 rounded-lg bg-sky-950/30 border border-sky-800/30 text-[10px] text-sky-300 flex items-center justify-between num-tabular">
+                <span>Media calcolata (se Blend attivo):</span>
                 <span className="font-bold text-xs">{tempMin.average}&deg;C</span>
               </div>
             )}
           </div>
 
           {/* 3. Rain Concordance */}
-          <div className="p-2.5 rounded-xl bg-slate-900/60 border border-slate-800/70">
-            <div className="flex items-center justify-between mb-1.5">
+          <div className="p-2.5 rounded-xl bg-slate-900/40 border border-slate-800/70">
+            <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-1.5 font-semibold text-slate-200">
                 <Droplets className="w-3.5 h-3.5 text-cyan-400" />
                 <span>Precipitazioni Previste</span>
@@ -158,9 +162,10 @@ export const ModelComparisonCard: React.FC<ModelComparisonCardProps> = ({
                 {rain.concordanceLabel}
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-1.5 text-center">
+
+            <div className="grid grid-cols-3 gap-2 text-center num-tabular">
               {rain.values.map((v) => (
-                <div key={v.modelId} className="p-1.5 rounded-lg bg-slate-950/60 border border-slate-800/80">
+                <div key={v.modelId} className="p-1.5 rounded-lg bg-slate-950/50 border border-slate-800/70">
                   <div className="text-[10px] text-slate-400 font-medium truncate">{v.modelName}</div>
                   <div className={`text-sm font-bold ${v.value > 0 ? 'text-cyan-300' : 'text-slate-400'}`}>
                     {v.value} mm

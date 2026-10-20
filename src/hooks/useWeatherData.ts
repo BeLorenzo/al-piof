@@ -8,6 +8,7 @@ import {
 } from '../api/weatherApi';
 import { fetchAirQuality } from '../api/airQualityApi';
 import { getEaqiInfo } from '../utils/aqiScale';
+import { reconcileWeatherCode } from '../utils/wmoCodes';
 import {
   calculateDewPoint,
   getDewPointComfort,
@@ -16,7 +17,9 @@ import {
   generateDaySummaryText,
   calculateDayModelComparison,
   calculateHourlyModelComparison,
+  averageWindDirection,
 } from '../utils/meteoMath';
+import { useAppStore } from '../store/useAppStore';
 import type {
   Location,
   WeatherModel,
@@ -38,8 +41,12 @@ function normalizeWeatherData(
   model: WeatherModel,
   comparisons?: RawModelComparisonsResponse | null
 ): NormalizedWeatherData {
+  const preferences = useAppStore.getState().preferences;
+  const isBlendMode = model === 'best_match';
+  const applyEnsemble = isBlendMode && preferences.useEnsembleAverageInBlend;
+
   // Map hourly air quality by ISO string
-  const aqiMap = new Map<string, { aqi: number; pm10: number; pm25: number }>();
+  const aqiMap = new Map<string, { aqi: number | null; pm10: number | null; pm25: number | null }>();
   if (airQuality.hourly && airQuality.hourly.time) {
     for (let i = 0; i < airQuality.hourly.time.length; i++) {
       aqiMap.set(airQuality.hourly.time[i], {
@@ -82,21 +89,22 @@ function normalizeWeatherData(
 
     let hourlyComparison: HourlyModelComparison | undefined;
     if (comparisons?.hourly) {
+      const c = comparisons.hourly;
       const tempItems = [
         {
           modelName: 'MeteoSwiss',
           modelId: 'meteoswiss_icon_ch2',
-          value: comparisons.hourly.temperature_2m_meteoswiss_icon_ch2?.[i],
+          value: c.temperature_2m_meteoswiss_icon_ch2?.[i],
         },
         {
           modelName: 'ECMWF',
           modelId: 'ecmwf_ifs025',
-          value: comparisons.hourly.temperature_2m_ecmwf_ifs025?.[i],
+          value: c.temperature_2m_ecmwf_ifs025?.[i] ?? c.temperature_2m?.[i],
         },
         {
-          modelName: 'ICON-D2',
-          modelId: 'icon_d2',
-          value: comparisons.hourly.temperature_2m_icon_d2?.[i],
+          modelName: 'ICON',
+          modelId: 'icon_seamless',
+          value: c.temperature_2m_icon_seamless?.[i] ?? c.temperature_2m_icon_d2?.[i],
         },
       ];
 
@@ -104,32 +112,40 @@ function normalizeWeatherData(
         {
           modelName: 'MeteoSwiss',
           modelId: 'meteoswiss_icon_ch2',
-          value: comparisons.hourly.precipitation_meteoswiss_icon_ch2?.[i],
+          value: c.precipitation_meteoswiss_icon_ch2?.[i],
         },
         {
           modelName: 'ECMWF',
           modelId: 'ecmwf_ifs025',
-          value: comparisons.hourly.precipitation_ecmwf_ifs025?.[i],
+          value: c.precipitation_ecmwf_ifs025?.[i] ?? c.precipitation?.[i],
         },
         {
-          modelName: 'ICON-D2',
-          modelId: 'icon_d2',
-          value: comparisons.hourly.precipitation_icon_d2?.[i],
+          modelName: 'ICON',
+          modelId: 'icon_seamless',
+          value: c.precipitation_icon_seamless?.[i] ?? c.precipitation_icon_d2?.[i],
         },
       ];
 
       hourlyComparison = calculateHourlyModelComparison(tempItems, rainItems);
     }
 
-    // Se la comparazione multimodello è presente, la temperatura principale mostrata è la media dei modelli
+    // Applica la media dei modelli SOLO se l'utente è in modalità Blend e ha abilitato l'opzione
     const effectiveTemp =
-      hourlyComparison?.temperature.average != null
+      applyEnsemble && hourlyComparison?.temperature.average != null
         ? hourlyComparison.temperature.average
         : temperature;
     const tempDelta = effectiveTemp - temperature;
     const effectiveApparentTemp =
       Math.round((apparentTemperature + tempDelta) * 10) / 10;
     const effectiveDewPoint = calculateDewPoint(effectiveTemp, relativeHumidity);
+
+    const cloudCoverVal = forecast.hourly.cloud_cover[i] ?? 0;
+    const reconciledHourlyCode = reconcileWeatherCode(
+      forecast.hourly.weather_code[i],
+      precipitation,
+      precipitationProbability,
+      cloudCoverVal
+    );
 
     allHourly.push({
       time: timeIso,
@@ -138,7 +154,7 @@ function normalizeWeatherData(
       temperature: effectiveTemp,
       apparentTemperature: effectiveApparentTemp,
       dewPoint: effectiveDewPoint,
-      weatherCode: forecast.hourly.weather_code[i],
+      weatherCode: reconciledHourlyCode,
       precipitationProbability,
       precipitation,
       windSpeed,
@@ -182,6 +198,43 @@ function normalizeWeatherData(
     const dewPointMax = dewPoints.length ? Math.max(...dewPoints) : 10;
     const dewPointMin = dewPoints.length ? Math.min(...dewPoints) : 5;
 
+    // Umidità media reale delle 24 ore
+    const humidities = dayHourly.map((h) => h.relativeHumidity);
+    const humidityAvg = humidities.length
+      ? Math.round(humidities.reduce((a, b) => a + b, 0) / humidities.length)
+      : 60;
+
+    // Visibilità minima (km) e Copertura nuvolosa media del giorno
+    const visibilities = dayHourly.map((h) => h.visibility);
+    const visibilityMin = visibilities.length
+      ? Math.round(Math.min(...visibilities) / 100) / 10
+      : 10;
+
+    const cloudCovers = dayHourly.map((h) => h.cloudCover);
+    const cloudCoverAvg = cloudCovers.length
+      ? Math.round(cloudCovers.reduce((a, b) => a + b, 0) / cloudCovers.length)
+      : 50;
+
+    // Zero Termico Max e Min della giornata
+    const freezingLevels = dayHourly.map((h) => h.freezingLevel);
+    const freezingLevelMax = freezingLevels.length ? Math.max(...freezingLevels) : 0;
+    const freezingLevelMin = freezingLevels.length ? Math.min(...freezingLevels) : 0;
+
+    // Direzione vento prevalente/media trigonometrica
+    const windAngles = dayHourly.map((h) => h.windDirection);
+    const windDirectionDominant = averageWindDirection(windAngles);
+
+    // Qualità dell'aria del giorno
+    const dayAqis = dayHourly
+      .map((h) => h.europeanAqi)
+      .filter((v): v is number => v !== null && !isNaN(v));
+    const dayMaxAqi = dayAqis.length
+      ? Math.max(...dayAqis)
+      : d === 0 && airQuality.current?.european_aqi != null
+      ? airQuality.current.european_aqi
+      : null;
+    const dayAqiInfo = dayMaxAqi !== null ? getEaqiInfo(dayMaxAqi) : null;
+
     const rawUvMax = forecast.daily.uv_index_max[d] ?? 0;
     const uvMaxInfo = getUvInfo(rawUvMax);
 
@@ -208,21 +261,22 @@ function normalizeWeatherData(
 
     let dayComparison: DayModelComparison | undefined;
     if (comparisons?.daily) {
+      const c = comparisons.daily;
       const maxItems = [
         {
           modelName: 'MeteoSwiss',
           modelId: 'meteoswiss_icon_ch2',
-          value: comparisons.daily.temperature_2m_max_meteoswiss_icon_ch2?.[d],
+          value: c.temperature_2m_max_meteoswiss_icon_ch2?.[d],
         },
         {
           modelName: 'ECMWF',
           modelId: 'ecmwf_ifs025',
-          value: comparisons.daily.temperature_2m_max_ecmwf_ifs025?.[d],
+          value: c.temperature_2m_max_ecmwf_ifs025?.[d] ?? c.temperature_2m_max?.[d],
         },
         {
-          modelName: 'ICON-D2',
-          modelId: 'icon_d2',
-          value: comparisons.daily.temperature_2m_max_icon_d2?.[d],
+          modelName: 'ICON',
+          modelId: 'icon_seamless',
+          value: c.temperature_2m_max_icon_seamless?.[d] ?? c.temperature_2m_max_icon_d2?.[d],
         },
       ];
 
@@ -230,17 +284,17 @@ function normalizeWeatherData(
         {
           modelName: 'MeteoSwiss',
           modelId: 'meteoswiss_icon_ch2',
-          value: comparisons.daily.temperature_2m_min_meteoswiss_icon_ch2?.[d],
+          value: c.temperature_2m_min_meteoswiss_icon_ch2?.[d],
         },
         {
           modelName: 'ECMWF',
           modelId: 'ecmwf_ifs025',
-          value: comparisons.daily.temperature_2m_min_ecmwf_ifs025?.[d],
+          value: c.temperature_2m_min_ecmwf_ifs025?.[d] ?? c.temperature_2m_min?.[d],
         },
         {
-          modelName: 'ICON-D2',
-          modelId: 'icon_d2',
-          value: comparisons.daily.temperature_2m_min_icon_d2?.[d],
+          modelName: 'ICON',
+          modelId: 'icon_seamless',
+          value: c.temperature_2m_min_icon_seamless?.[d] ?? c.temperature_2m_min_icon_d2?.[d],
         },
       ];
 
@@ -248,45 +302,61 @@ function normalizeWeatherData(
         {
           modelName: 'MeteoSwiss',
           modelId: 'meteoswiss_icon_ch2',
-          value: comparisons.daily.precipitation_sum_meteoswiss_icon_ch2?.[d],
+          value: c.precipitation_sum_meteoswiss_icon_ch2?.[d],
         },
         {
           modelName: 'ECMWF',
           modelId: 'ecmwf_ifs025',
-          value: comparisons.daily.precipitation_sum_ecmwf_ifs025?.[d],
+          value: c.precipitation_sum_ecmwf_ifs025?.[d] ?? c.precipitation_sum?.[d],
         },
         {
-          modelName: 'ICON-D2',
-          modelId: 'icon_d2',
-          value: comparisons.daily.precipitation_sum_icon_d2?.[d],
+          modelName: 'ICON',
+          modelId: 'icon_seamless',
+          value: c.precipitation_sum_icon_seamless?.[d] ?? c.precipitation_sum_icon_d2?.[d],
         },
       ];
 
       dayComparison = calculateDayModelComparison(maxItems, minItems, rainItems, d);
     }
 
-    // Se la comparazione multimodello è presente, applichiamo la media dei modelli a Max e Min
+    // Se la comparazione multimodello è presente e l'opzione è attiva in Blend, applichiamo la media a Max e Min
     const effectiveTempMax =
-      dayComparison?.tempMax.average != null
+      applyEnsemble && dayComparison?.tempMax.average != null
         ? Math.round(dayComparison.tempMax.average)
         : tempMax;
     const effectiveTempMin =
-      dayComparison?.tempMin.average != null
+      applyEnsemble && dayComparison?.tempMin.average != null
         ? Math.round(dayComparison.tempMin.average)
         : tempMin;
+
+    const dailyReconciledCode = reconcileWeatherCode(
+      forecast.daily.weather_code[d],
+      precipitationSum,
+      forecast.daily.precipitation_probability_max[d] ?? 0,
+      cloudCoverAvg
+    );
 
     daily.push({
       date: dateStr,
       dateLabel,
       dayName: capitalizedDayName,
       isToday: isToday(dateObj),
-      weatherCode: forecast.daily.weather_code[d],
+      weatherCode: dailyReconciledCode,
       tempMax: effectiveTempMax,
       tempMin: effectiveTempMin,
       apparentTempMax: Math.round(forecast.daily.apparent_temperature_max[d]),
       apparentTempMin: Math.round(forecast.daily.apparent_temperature_min[d]),
       dewPointMax,
       dewPointMin,
+      humidityAvg,
+      visibilityMin,
+      cloudCoverAvg,
+      freezingLevelMax,
+      freezingLevelMin,
+      airQualityEaqi: dayMaxAqi,
+      airQualityLabel: dayAqiInfo?.label ?? null,
+      airQualityColor: dayAqiInfo?.colorClass ?? null,
+      windDirectionDominant,
       sunrise: forecast.daily.sunrise[d]
         ? format(parseISO(forecast.daily.sunrise[d]), 'HH:mm')
         : '--:--',
@@ -329,9 +399,13 @@ function normalizeWeatherData(
     }
   }
 
-  // Current weather: usiamo lo slot orario corrente che ha già la temperatura media multimodello
+  // Current weather
   const nowHourIso = forecast.current?.time ? forecast.current.time.slice(0, 13) : '';
-  const currentSlot = allHourly.find((h) => h.time.startsWith(nowHourIso)) ?? allHourly[0];
+  const currentSlotIdx = Math.max(
+    0,
+    allHourly.findIndex((h) => h.time.startsWith(nowHourIso))
+  );
+  const currentSlot = allHourly[currentSlotIdx] ?? allHourly[0];
   const cur = forecast.current;
 
   const currentTemp =
@@ -349,11 +423,25 @@ function normalizeWeatherData(
   const currentDewPoint = calculateDewPoint(currentTemp, currentHumidity);
   const dewPointComfort = getDewPointComfort(currentDewPoint).label;
 
+  // Calcolo corretto del trend barometrico confrontando con 3 ore fa
   const pNow = cur?.surface_pressure ?? 1013;
-  const pPast = allHourly[Math.max(0, 0)]?.surfacePressure ?? pNow;
+  const pPastIdx = Math.max(0, currentSlotIdx - 3);
+  const pPast = allHourly[pPastIdx]?.surfacePressure ?? pNow;
   const pDelta = pNow - pPast;
   const currentPressureTrend: 'rising' | 'falling' | 'steady' =
-    pDelta > 1 ? 'rising' : pDelta < -1 ? 'falling' : 'steady';
+    pDelta > 0.8 ? 'rising' : pDelta < -0.8 ? 'falling' : 'steady';
+
+  // Riconciliazione coerenza meteo attuale
+  const curPrecip = Math.round((cur?.precipitation ?? 0) * 10) / 10;
+  const curProb = currentSlot?.precipitationProbability ?? 0;
+  const curCloud = cur?.cloud_cover ?? currentSlot?.cloudCover ?? 0;
+  const rawCurCode = cur?.weather_code ?? currentSlot?.weatherCode ?? 0;
+  const currentReconciledCode = reconcileWeatherCode(
+    rawCurCode,
+    curPrecip,
+    curProb,
+    curCloud
+  );
 
   const current = {
     time: cur?.time ?? new Date().toISOString(),
@@ -361,10 +449,11 @@ function normalizeWeatherData(
     apparentTemperature: currentApparentTemp,
     dewPoint: currentDewPoint,
     dewPointComfort,
-    weatherCode: cur?.weather_code ?? currentSlot?.weatherCode ?? 0,
+    weatherCode: currentReconciledCode,
     isDay: cur?.is_day === 1,
-    precipitation: Math.round((cur?.precipitation ?? 0) * 10) / 10,
-    cloudCover: cur?.cloud_cover ?? 0,
+    precipitation: curPrecip,
+    cloudCover: curCloud,
+    visibility: currentSlot?.visibility ? Math.round(currentSlot.visibility / 100) / 10 : 10,
     surfacePressure: Math.round(pNow),
     pressureTrend: currentPressureTrend,
     windSpeed: Math.round(cur?.wind_speed_10m ?? 0),

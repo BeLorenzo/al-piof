@@ -6,6 +6,7 @@ import {
   Navigation,
   Search,
   Loader2,
+  SlidersHorizontal,
 } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import { useGeolocation } from '../../hooks/useGeolocation';
@@ -29,6 +30,7 @@ export const TopBar: React.FC<TopBarProps> = ({ onOpenSearch }) => {
     selectedModel,
     setSelectedLocation,
     setSelectedModel,
+    setIsSettingsOpen,
     toggleFavorite,
     isFavorite,
   } = useAppStore();
@@ -38,7 +40,7 @@ export const TopBar: React.FC<TopBarProps> = ({ onOpenSearch }) => {
 
   return (
     <header className="sticky top-0 z-40 bg-slate-950/85 backdrop-blur-md border-b border-slate-800/80 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-2.5">
-      {/* Upper line: App title, active model selector and quick tools */}
+      {/* Upper line: App title, active model selector and customize tool */}
       <div className="flex items-center justify-between gap-2 mb-2">
         <div className="flex items-center gap-2">
           <div className="p-1.5 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-400">
@@ -54,7 +56,7 @@ export const TopBar: React.FC<TopBarProps> = ({ onOpenSearch }) => {
           </div>
         </div>
 
-        {/* Model dropdown selector */}
+        {/* Controls: Model selector + Settings */}
         <div className="flex items-center gap-1.5">
           <select
             value={selectedModel}
@@ -67,11 +69,20 @@ export const TopBar: React.FC<TopBarProps> = ({ onOpenSearch }) => {
               </option>
             ))}
           </select>
+
+          <button
+            onClick={() => setIsSettingsOpen(true)}
+            title="Personalizza stile e dati"
+            className="p-1.5 rounded-lg bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-sky-400 border border-slate-800 transition-colors"
+            type="button"
+          >
+            <SlidersHorizontal className="w-3.5 h-3.5" />
+          </button>
         </div>
       </div>
 
       {/* Location row with GPS, Star and Search trigger */}
-      <div className="flex items-center justify-between gap-2 bg-slate-900/70 border border-slate-800/90 rounded-xl px-3 py-2 mb-2.5">
+      <div className="flex items-center justify-between gap-2 bg-slate-900/70 border border-slate-800/90 rounded-xl px-3 py-2 mb-2.5 card-surface">
         <button
           onClick={onOpenSearch}
           className="flex items-center gap-2 text-left min-w-0 flex-1 group"
@@ -81,7 +92,7 @@ export const TopBar: React.FC<TopBarProps> = ({ onOpenSearch }) => {
             <div className="text-sm font-semibold text-slate-100 truncate group-hover:text-sky-300 transition-colors">
               {selectedLocation.name}
             </div>
-            <div className="text-[10px] text-slate-400 truncate">
+            <div className="text-[10px] text-slate-400 truncate num-tabular">
               {selectedLocation.elevation ? `${selectedLocation.elevation} m s.l.m.` : ''}
               {selectedLocation.population ? ` • ${selectedLocation.population.toLocaleString('it-IT')} ab.` : ''}
               {selectedLocation.admin2 ? ` • Prov. ${selectedLocation.admin2}` : selectedLocation.admin1 ? ` • ${selectedLocation.admin1}` : ''}

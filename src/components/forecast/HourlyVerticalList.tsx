@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { HourlyRow } from './HourlyRow';
 import { Filter } from 'lucide-react';
+import { useAppStore } from '../../store/useAppStore';
 import type { HourlyRowData } from '../../types/weather.types';
 
 interface HourlyVerticalListProps {
@@ -12,8 +13,16 @@ export const HourlyVerticalList: React.FC<HourlyVerticalListProps> = ({
   hourly,
   isToday,
 }) => {
+  const preferences = useAppStore((state) => state.preferences);
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
-  const [onlyFromNow, setOnlyFromNow] = useState(false);
+  const [onlyFromNow, setOnlyFromNow] = useState(preferences.defaultFilterFromNow);
+
+  // Sync if preference changes
+  useEffect(() => {
+    if (preferences.defaultFilterFromNow && isToday) {
+      setOnlyFromNow(true);
+    }
+  }, [preferences.defaultFilterFromNow, isToday]);
 
   const currentHourNum = new Date().getHours();
 
@@ -34,7 +43,7 @@ export const HourlyVerticalList: React.FC<HourlyVerticalListProps> = ({
       <div className="flex items-center justify-between px-1 text-xs text-slate-400">
         <span className="font-semibold text-slate-200 flex items-center gap-1.5">
           <span>Previsione Oraria</span>
-          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-800 text-slate-400 font-normal">
+          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-800 text-slate-400 font-normal num-tabular">
             {displayedRows.length} ore
           </span>
         </span>
@@ -47,6 +56,7 @@ export const HourlyVerticalList: React.FC<HourlyVerticalListProps> = ({
                 ? 'bg-sky-500/20 border-sky-500/60 text-sky-300 font-semibold shadow-sm'
                 : 'bg-slate-900/80 border-slate-800 text-slate-400 hover:text-slate-200'
             }`}
+            type="button"
           >
             <Filter className="w-3 h-3" />
             <span>Da adesso</span>
@@ -54,8 +64,8 @@ export const HourlyVerticalList: React.FC<HourlyVerticalListProps> = ({
         )}
       </div>
 
-      {/* Rows Grouped in Frosted Glass Container */}
-      <div className="rounded-3xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-md overflow-hidden shadow-xl divide-y divide-slate-800/50">
+      {/* Rows Grouped in Clean Container */}
+      <div className="rounded-3xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-md overflow-hidden shadow-xl divide-y divide-slate-800/50 card-surface">
         {displayedRows.map((row, idx) => {
           const hourNum = parseInt(row.hour.split(':')[0], 10);
           const isCurrent = isToday && hourNum === currentHourNum;

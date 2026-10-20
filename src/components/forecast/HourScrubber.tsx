@@ -20,18 +20,18 @@ export const HourScrubber: React.FC<HourScrubberProps> = ({ hourly }) => {
   const quickHours = [0, 6, 12, 18];
 
   return (
-    <div className="bg-slate-900/80 border-y border-slate-800/80 px-4 py-2.5 backdrop-blur-md sticky top-[244px] z-20">
-      <div className="flex items-center justify-between gap-3 mb-2">
+    <div className="bg-slate-900/80 border-y border-slate-800/80 px-4 py-2 backdrop-blur-md card-surface">
+      <div className="flex items-center justify-between gap-3 mb-1.5">
         <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-300">
           <Clock className="w-3.5 h-3.5 text-sky-400" />
           <span>Salta all&apos;ora:</span>
-          <span className="text-sky-300 font-bold ml-1">
+          <span className="text-sky-300 font-bold ml-1 num-tabular">
             {selectedHour.toString().padStart(2, '0')}:00
           </span>
         </div>
 
         {/* Quick jump buttons */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 num-tabular">
           {quickHours.map((h) => (
             <button
               key={h}
@@ -41,6 +41,7 @@ export const HourScrubber: React.FC<HourScrubberProps> = ({ hourly }) => {
                   ? 'bg-sky-500/20 border-sky-500/60 text-sky-300'
                   : 'bg-slate-800/80 border-slate-700/60 text-slate-400 hover:text-slate-200'
               }`}
+              type="button"
             >
               {h.toString().padStart(2, '0')}
             </button>
@@ -73,7 +74,7 @@ export const HourScrubber: React.FC<HourScrubberProps> = ({ hourly }) => {
         />
       </div>
 
-      <div className="flex justify-between text-[9px] text-slate-500 mt-1 px-0.5">
+      <div className="flex justify-between text-[9px] text-slate-500 mt-1 px-0.5 num-tabular">
         <span>00:00</span>
         <span>06:00</span>
         <span>12:00</span>

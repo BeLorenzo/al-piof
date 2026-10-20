@@ -9,7 +9,8 @@ import {
   CloudRain,
   CloudSnow,
   CloudLightning,
-  Sparkles,
+  CloudHail,
+  Snowflake,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -21,6 +22,33 @@ export interface WmoInfo {
   isRain: boolean;
   isSnow: boolean;
   isThunder: boolean;
+}
+
+/**
+ * Filtro di coerenza fisica:
+ * Se i modelli numerici (soprattutto in blend) rilasciano un codice pioggia o neve
+ * ma precipitazioni e probabilità sono a zero, riconcilia il codice WMO con la reale
+ * copertura nuvolosa invece di mostrare finta pioggia con asfalto secco.
+ */
+export function reconcileWeatherCode(
+  rawCode: number,
+  precipitation: number,
+  probability: number,
+  cloudCover: number
+): number {
+  const isPrecipitationCode =
+    (rawCode >= 51 && rawCode <= 67) ||
+    (rawCode >= 71 && rawCode <= 77) ||
+    (rawCode >= 80 && rawCode <= 86);
+
+  if (isPrecipitationCode && precipitation < 0.1 && probability < 15) {
+    if (cloudCover >= 75) return 3; // Coperto
+    if (cloudCover >= 40) return 2; // Nuvoloso
+    if (cloudCover >= 15) return 1; // Poco nuvoloso
+    return 0; // Sereno
+  }
+
+  return rawCode;
 }
 
 export function getWmoInfo(code: number, isDay = true): WmoInfo {
@@ -120,7 +148,7 @@ export function getWmoInfo(code: number, isDay = true): WmoInfo {
       return {
         code,
         label: 'Pioviggine congelantesi',
-        icon: Sparkles,
+        icon: CloudHail,
         colorClass: 'text-teal-300',
         isRain: true,
         isSnow: false,
@@ -161,7 +189,7 @@ export function getWmoInfo(code: number, isDay = true): WmoInfo {
       return {
         code,
         label: 'Pioggia congelantesi',
-        icon: Sparkles,
+        icon: Snowflake,
         colorClass: 'text-teal-400',
         isRain: true,
         isSnow: false,
@@ -201,7 +229,7 @@ export function getWmoInfo(code: number, isDay = true): WmoInfo {
       return {
         code,
         label: 'Granuli di neve',
-        icon: Sparkles,
+        icon: Snowflake,
         colorClass: 'text-slate-200',
         isSnow: true,
         isRain: false,
@@ -272,7 +300,7 @@ export function getWmoInfo(code: number, isDay = true): WmoInfo {
       return {
         code,
         label: 'Temporale con grandine',
-        icon: CloudLightning,
+        icon: CloudHail,
         colorClass: 'text-amber-500',
         isThunder: true,
         isRain: true,

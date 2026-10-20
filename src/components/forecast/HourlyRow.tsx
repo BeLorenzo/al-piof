@@ -1,19 +1,10 @@
 import React from 'react';
-import {
-  ChevronDown,
-  ArrowUp,
-  Mountain,
-  Droplets,
-  Cloud,
-  Wind,
-  Sun,
-  Sparkles,
-  Thermometer,
-} from 'lucide-react';
+import { ChevronDown, ArrowUp, Droplets } from 'lucide-react';
 import { getWmoInfo } from '../../utils/wmoCodes';
 import { getWindArrowStyle, getWindDirection } from '../../utils/windUtils';
-import { getEaqiInfo } from '../../utils/aqiScale';
-import { getUvInfo } from '../../utils/meteoMath';
+import { formatTemperature, formatWindSpeed } from '../../utils/meteoMath';
+import { HourlyAccordionDetails } from './HourlyAccordionDetails';
+import { useAppStore } from '../../store/useAppStore';
 import type { HourlyRowData } from '../../types/weather.types';
 
 interface HourlyRowProps {
@@ -29,13 +20,14 @@ export const HourlyRow: React.FC<HourlyRowProps> = ({
   isExpanded,
   onToggle,
 }) => {
+  const preferences = useAppStore((state) => state.preferences);
   const hourNum = parseInt(row.hour.split(':')[0], 10);
   const isDay = hourNum >= 6 && hourNum < 20;
   const wmo = getWmoInfo(row.weatherCode, isDay);
   const WmoIcon = wmo.icon;
   const windDir = getWindDirection(row.windDirection);
-  const aqiInfo = getEaqiInfo(row.europeanAqi);
-  const uvInfo = getUvInfo(row.uvIndex);
+
+  const isCompact = preferences.compactHourlyRows;
 
   return (
     <div
@@ -48,10 +40,12 @@ export const HourlyRow: React.FC<HourlyRowProps> = ({
           : 'hover:bg-slate-900/30'
       }`}
     >
-      {/* 5-Column Compact Row */}
+      {/* 5-Column Row */}
       <div
         onClick={onToggle}
-        className={`grid grid-cols-[54px_1fr_52px_64px_58px_16px] items-center px-3.5 py-2.5 cursor-pointer select-none text-xs gap-1.5 transition-all duration-150 ${
+        className={`grid grid-cols-[58px_1fr_56px_66px_60px_16px] items-center px-3 cursor-pointer select-none text-xs gap-1.5 transition-all duration-150 ${
+          isCompact ? 'py-1.5' : 'py-2.5'
+        } ${
           isCurrentHour
             ? 'bg-sky-500/10'
             : isExpanded
@@ -59,11 +53,11 @@ export const HourlyRow: React.FC<HourlyRowProps> = ({
             : 'hover:bg-slate-800/25 active:bg-slate-800/40'
         }`}
       >
-        {/* Col 1: Ora + Pallino Affidabilità */}
+        {/* Col 1: Ora + Badge Affidabilità */}
         <div className="flex flex-col items-start justify-center">
           <div className="flex items-center gap-1.5">
             <span
-              className={`text-[13px] font-bold tracking-tight ${
+              className={`text-[13px] font-bold tracking-tight num-tabular ${
                 isCurrentHour ? 'text-sky-300' : 'text-slate-100'
               }`}
             >
@@ -71,13 +65,13 @@ export const HourlyRow: React.FC<HourlyRowProps> = ({
             </span>
             {row.comparison && (
               <span
-                className={`w-1.5 h-1.5 rounded-full shrink-0 shadow-sm ${row.comparison.dotColorClass}`}
+                className={`w-2 h-2 rounded-full shrink-0 shadow-sm ${row.comparison.dotColorClass}`}
                 title={`Affidabilità ore ${row.hour}: ${row.comparison.overallReliability} (${row.comparison.overallScore}%)`}
               />
             )}
           </div>
           {isCurrentHour && (
-            <span className="text-[8px] tracking-wider px-1 py-0.5 rounded bg-sky-500/25 text-sky-300 font-extrabold uppercase mt-0.5">
+            <span className="text-[8px] tracking-wider px-1 py-0.2 rounded bg-sky-500/25 text-sky-300 font-extrabold uppercase mt-0.5">
               ORA
             </span>
           )}
@@ -94,17 +88,17 @@ export const HourlyRow: React.FC<HourlyRowProps> = ({
         </div>
 
         {/* Col 3: Temp (Percepita) */}
-        <div className="text-right flex flex-col items-end">
+        <div className="text-right flex flex-col items-end num-tabular">
           <span className="font-bold text-white text-[14px] leading-tight">
-            {row.temperature}°
+            {formatTemperature(row.temperature, preferences.roundTemperatures)}
           </span>
           <span className="text-[10px] text-slate-500 leading-none">
-            {row.apparentTemperature}°
+            {formatTemperature(row.apparentTemperature, preferences.roundTemperatures)}
           </span>
         </div>
 
         {/* Col 4: Pioggia (% + mm) */}
-        <div className="text-right flex flex-col items-end">
+        <div className="text-right flex flex-col items-end num-tabular">
           {row.precipitation > 0 ? (
             <div className="flex items-center gap-1 text-cyan-300 font-semibold text-[11px]">
               <Droplets className="w-2.5 h-2.5 shrink-0" />
@@ -125,10 +119,10 @@ export const HourlyRow: React.FC<HourlyRowProps> = ({
         </div>
 
         {/* Col 5: Vento (km/h + Freccia) */}
-        <div className="flex items-center justify-end gap-1 text-right text-slate-300">
+        <div className="flex items-center justify-end gap-1 text-right text-slate-300 num-tabular">
           <div className="leading-tight">
             <span className="font-semibold text-[11px] text-slate-300">
-              {row.windSpeed}
+              {formatWindSpeed(row.windSpeed, preferences.windUnit)}
             </span>
             <span className="text-[9px] text-slate-500 block">
               {windDir}
@@ -152,118 +146,8 @@ export const HourlyRow: React.FC<HourlyRowProps> = ({
         </div>
       </div>
 
-      {/* Accordion Expanded Detail */}
-      {isExpanded && (
-        <div className="px-3 pb-3 pt-1 grid grid-cols-3 gap-2 bg-slate-950/60 text-[11px] border-t border-slate-800/40 animate-fade-in">
-          <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800">
-            <div className="flex items-center gap-1 text-slate-400 text-[10px]">
-              <Mountain className="w-3 h-3 text-sky-400" />
-              <span>Zero Termico</span>
-            </div>
-            <div className="font-bold text-slate-200 mt-0.5">
-              {row.freezingLevel} m
-            </div>
-          </div>
-
-          <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800">
-            <div className="flex items-center gap-1 text-slate-400 text-[10px]">
-              <Thermometer className="w-3 h-3 text-cyan-400" />
-              <span>P. Rugiada</span>
-            </div>
-            <div className="font-bold text-slate-200 mt-0.5">
-              {row.dewPoint}°C
-            </div>
-          </div>
-
-          <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800">
-            <div className="flex items-center gap-1 text-slate-400 text-[10px]">
-              <Droplets className="w-3 h-3 text-blue-400" />
-              <span>Umidità</span>
-            </div>
-            <div className="font-bold text-slate-200 mt-0.5">
-              {row.relativeHumidity}%
-            </div>
-          </div>
-
-          <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800">
-            <div className="flex items-center gap-1 text-slate-400 text-[10px]">
-              <Cloud className="w-3 h-3 text-slate-400" />
-              <span>Copertura</span>
-            </div>
-            <div className="font-bold text-slate-200 mt-0.5">
-              {row.cloudCover}%
-            </div>
-          </div>
-
-          <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800">
-            <div className="flex items-center gap-1 text-slate-400 text-[10px]">
-              <Wind className="w-3 h-3 text-cyan-400" />
-              <span>Raffica Max</span>
-            </div>
-            <div className="font-bold text-slate-200 mt-0.5">
-              {row.windGusts} km/h
-            </div>
-          </div>
-
-          <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800">
-            <div className="flex items-center gap-1 text-slate-400 text-[10px]">
-              <Sun className="w-3 h-3 text-amber-400" />
-              <span>Indice UV</span>
-            </div>
-            <div className="font-bold text-slate-200 mt-0.5">
-              {uvInfo.ratioText} ({uvInfo.label})
-            </div>
-          </div>
-
-          {/* Multi-Model Comparison & Reliability */}
-          {row.comparison && (
-            <div className="p-2.5 rounded-lg bg-slate-900/80 border border-slate-800 col-span-3 space-y-1.5">
-              <div className="flex items-center justify-between text-[11px] text-slate-300">
-                <span className="font-semibold flex items-center gap-1.5">
-                  <span className={`w-2 h-2 rounded-full ${row.comparison.dotColorClass}`} />
-                  Confronto Modelli ({row.comparison.overallReliability} • {row.comparison.overallScore}%)
-                </span>
-                <span className="text-[10px] text-slate-400">
-                  Spread &Delta; {row.comparison.temperature.spread}&deg;C ({row.comparison.temperature.agreement})
-                </span>
-              </div>
-
-              {/* Temperatures */}
-              <div className="grid grid-cols-3 gap-1.5 text-center text-[10px]">
-                {row.comparison.temperature.values.map((v) => (
-                  <div key={v.modelId} className="p-1 rounded bg-slate-950/70 border border-slate-800/80">
-                    <span className="text-slate-400 block truncate">{v.modelName}</span>
-                    <strong className="text-slate-100 text-[11px]">{v.value}&deg;C</strong>
-                  </div>
-                ))}
-              </div>
-              {row.comparison.temperature.average != null && (
-                <div className="text-[10px] text-sky-300 font-medium text-center bg-sky-950/40 rounded py-0.5 border border-sky-800/40">
-                  Media applicata: <strong>{row.comparison.temperature.average}&deg;C</strong>
-                </div>
-              )}
-
-              {/* Rain Concordance */}
-              <div className="flex items-center justify-between text-[10px] text-slate-400 pt-0.5 border-t border-slate-800/50">
-                <span>Pioggia modelli:</span>
-                <span className="text-cyan-300 font-medium">
-                  {row.comparison.rain.concordanceLabel}
-                </span>
-              </div>
-            </div>
-          )}
-
-          <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800 col-span-3 flex items-center justify-between">
-            <div className="flex items-center gap-1 text-slate-400 text-[10px]">
-              <Sparkles className="w-3 h-3 text-emerald-400" />
-              <span>Qualità Aria (EAQI):</span>
-            </div>
-            <div className={`font-bold ${aqiInfo.colorClass}`}>
-              {row.europeanAqi !== null ? `${row.europeanAqi} - ${aqiInfo.label}` : 'N/D'}
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Accordion Clean Breakdown */}
+      {isExpanded && <HourlyAccordionDetails row={row} />}
     </div>
   );
 };

@@ -24,7 +24,7 @@ export const RadarSection: React.FC<RadarSectionProps> = ({
           </div>
           <div>
             <div className="text-xs font-bold text-slate-100 flex items-center gap-1.5">
-              <span>Mappa Pioggia & Previsioni</span>
+              <span>Mappa Pioggia &amp; Radar ECMWF</span>
               {isPreview && (
                 <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-300 font-normal">
                   Anteprima
@@ -32,13 +32,13 @@ export const RadarSection: React.FC<RadarSectionProps> = ({
               )}
             </div>
             <div className="text-[11px] text-slate-400">
-              Previsione precipitazioni animate ECMWF con timeline interattiva
+              Previsione precipitazioni animate con timeline interattiva
             </div>
           </div>
         </div>
       </div>
 
-      {/* Map Container with Anti Scroll-Trap for Preview */}
+      {/* Map Container */}
       <div className="relative rounded-2xl overflow-hidden border border-slate-800/80 bg-slate-950 shadow-xl">
         <div className={isPreview ? 'pointer-events-none' : ''}>
           <WindyRadarEmbed
@@ -86,4 +86,3 @@ export const RadarSection: React.FC<RadarSectionProps> = ({
     </div>
   );
 };
-

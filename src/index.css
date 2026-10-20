@@ -10,11 +10,199 @@
   body {
     background-color: #020617;
     color: #f8fafc;
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11", "tnum";
   }
 }
 
-/* Custom scrollbar hiding utility */
+.num-tabular {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* ==========================================
+   SISTEMA TIPOGRAFICO DISTINTIVO (5 STILI)
+   ========================================== */
+.font-technical,
+.font-technical * {
+  font-family: "Space Grotesk", "Plus Jakarta Sans", system-ui, sans-serif;
+}
+.font-technical .num-tabular {
+  font-family: "JetBrains Mono", monospace;
+}
+
+.font-mono,
+.font-mono * {
+  font-family: "JetBrains Mono", ui-monospace, monospace !important;
+  letter-spacing: -0.02em;
+}
+
+.font-serif,
+.font-serif * {
+  font-family: "Plus Jakarta Sans", Georgia, serif;
+}
+.font-serif h1,
+.font-serif h2,
+.font-serif h3,
+.font-serif h4,
+.font-serif .text-5xl,
+.font-serif .font-black,
+.font-serif .font-bold {
+  font-family: "Playfair Display", Georgia, serif !important;
+  letter-spacing: -0.01em;
+}
+
+.font-rounded,
+.font-rounded * {
+  font-family: "Quicksand", "Plus Jakarta Sans", sans-serif !important;
+}
+
+.font-editorial,
+.font-editorial * {
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+}
+
+.font-system,
+.font-system * {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* ==========================================
+   MOTORE DI TEMI A VARIABILI CSS DINAMICHE
+   ========================================== */
+.app-theme-root {
+  background: var(--bg-app) !important;
+  color: var(--text-primary) !important;
+}
+
+.app-theme-root header {
+  background-color: var(--bg-header) !important;
+  border-bottom-color: var(--border-main) !important;
+}
+
+.app-theme-root nav {
+  background-color: var(--bg-header) !important;
+  border-color: var(--border-main) !important;
+}
+
+/* Card principali e superfici */
+.app-theme-root .card-surface,
+.app-theme-root .bg-slate-900,
+.app-theme-root .bg-slate-900\/40,
+.app-theme-root .bg-slate-900\/50,
+.app-theme-root .bg-slate-900\/60,
+.app-theme-root .bg-slate-900\/70,
+.app-theme-root .bg-slate-900\/75,
+.app-theme-root .bg-slate-900\/80,
+.app-theme-root .bg-slate-900\/90 {
+  background-color: var(--bg-card) !important;
+  background-image: none !important;
+  border-color: var(--border-main) !important;
+}
+
+/* Sotto-contenitori, pillole e righe espanse */
+.app-theme-root .bg-slate-950,
+.app-theme-root .bg-slate-950\/30,
+.app-theme-root .bg-slate-950\/40,
+.app-theme-root .bg-slate-950\/50,
+.app-theme-root .bg-slate-950\/60,
+.app-theme-root .bg-slate-950\/70,
+.app-theme-root .bg-slate-950\/80,
+.app-theme-root .bg-slate-950\/85,
+.app-theme-root .bg-slate-950\/90,
+.app-theme-root .bg-slate-800,
+.app-theme-root .bg-slate-800\/40,
+.app-theme-root .bg-slate-800\/60,
+.app-theme-root .bg-slate-800\/80,
+.app-theme-root .bg-slate-800\/90 {
+  background-color: var(--bg-sub) !important;
+  border-color: var(--border-main) !important;
+}
+
+/* Bordi globali */
+.app-theme-root .border-slate-800,
+.app-theme-root .border-slate-800\/50,
+.app-theme-root .border-slate-800\/60,
+.app-theme-root .border-slate-800\/70,
+.app-theme-root .border-slate-800\/80,
+.app-theme-root .border-slate-800\/90,
+.app-theme-root .border-slate-700,
+.app-theme-root .border-slate-700\/80,
+.app-theme-root .border-slate-900 {
+  border-color: var(--border-main) !important;
+}
+
+/* Testi adattivi (chiaro/scuro automatico) */
+.app-theme-root .text-white,
+.app-theme-root .text-slate-100 {
+  color: var(--text-primary) !important;
+}
+
+.app-theme-root .text-slate-200,
+.app-theme-root .text-slate-300 {
+  color: var(--text-secondary) !important;
+}
+
+.app-theme-root .text-slate-400,
+.app-theme-root .text-slate-500,
+.app-theme-root .text-slate-600 {
+  color: var(--text-muted) !important;
+}
+
+/* Colore di Contrasto / Accento Globale */
+.app-theme-root .bg-sky-500 {
+  background-color: var(--accent) !important;
+  color: var(--accent-contrast) !important;
+}
+
+.app-theme-root .bg-sky-500\/10,
+.app-theme-root .bg-sky-500\/20,
+.app-theme-root .bg-sky-500\/25,
+.app-theme-root .bg-sky-950\/30,
+.app-theme-root .bg-sky-950\/40,
+.app-theme-root .bg-sky-950\/60 {
+  background-color: var(--accent-soft) !important;
+}
+
+.app-theme-root .text-sky-400,
+.app-theme-root .text-sky-300,
+.app-theme-root .text-sky-200,
+.app-theme-root .text-sky-400\/80,
+.app-theme-root .text-sky-300\/80 {
+  color: var(--accent) !important;
+}
+
+.app-theme-root .border-sky-400,
+.app-theme-root .border-sky-500,
+.app-theme-root .border-sky-500\/20,
+.app-theme-root .border-sky-500\/60,
+.app-theme-root .border-sky-800\/60,
+.app-theme-root .border-sky-800\/40 {
+  border-color: var(--accent-border) !important;
+}
+
+.app-theme-root .border-l-sky-500,
+.app-theme-root .border-l-sky-400 {
+  border-left-color: var(--accent) !important;
+}
+
+.app-theme-root input[type="range"],
+.app-theme-root input[type="checkbox"] {
+  accent-color: var(--accent) !important;
+}
+
+/* Stili Superficie */
+.surface-flat .card-surface {
+  backdrop-filter: none !important;
+  border-width: 1px !important;
+  box-shadow: none !important;
+}
+
+.surface-contrast .card-surface {
+  border-width: 2px !important;
+  border-color: var(--accent-border) !important;
+}
+
+/* Utility scrollbar */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }

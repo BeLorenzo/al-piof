@@ -31,7 +31,7 @@ export const WindyRadarEmbed: React.FC<WindyRadarEmbedProps> = ({
           onClick={() => setCurrentLayer('rain')}
           className={`px-2.5 py-1 rounded-lg text-xs font-medium shrink-0 flex items-center gap-1 transition-all ${
             currentLayer === 'rain'
-              ? 'bg-sky-500 text-white shadow-sm'
+              ? 'bg-sky-500 text-white shadow-sm font-semibold'
               : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200'
           }`}
           type="button"
@@ -43,7 +43,7 @@ export const WindyRadarEmbed: React.FC<WindyRadarEmbedProps> = ({
           onClick={() => setCurrentLayer('radar')}
           className={`px-2.5 py-1 rounded-lg text-xs font-medium shrink-0 flex items-center gap-1 transition-all ${
             currentLayer === 'radar'
-              ? 'bg-emerald-600 text-white shadow-sm'
+              ? 'bg-emerald-600 text-white shadow-sm font-semibold'
               : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200'
           }`}
           type="button"
@@ -55,7 +55,7 @@ export const WindyRadarEmbed: React.FC<WindyRadarEmbedProps> = ({
           onClick={() => setCurrentLayer('temp')}
           className={`px-2.5 py-1 rounded-lg text-xs font-medium shrink-0 flex items-center gap-1 transition-all ${
             currentLayer === 'temp'
-              ? 'bg-amber-600 text-white shadow-sm'
+              ? 'bg-amber-600 text-white shadow-sm font-semibold'
               : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200'
           }`}
           type="button"
@@ -67,7 +67,7 @@ export const WindyRadarEmbed: React.FC<WindyRadarEmbedProps> = ({
           onClick={() => setCurrentLayer('wind')}
           className={`px-2.5 py-1 rounded-lg text-xs font-medium shrink-0 flex items-center gap-1 transition-all ${
             currentLayer === 'wind'
-              ? 'bg-cyan-600 text-white shadow-sm'
+              ? 'bg-cyan-600 text-white shadow-sm font-semibold'
               : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200'
           }`}
           type="button"
@@ -79,7 +79,7 @@ export const WindyRadarEmbed: React.FC<WindyRadarEmbedProps> = ({
           onClick={() => setCurrentLayer('clouds')}
           className={`px-2.5 py-1 rounded-lg text-xs font-medium shrink-0 flex items-center gap-1 transition-all ${
             currentLayer === 'clouds'
-              ? 'bg-indigo-600 text-white shadow-sm'
+              ? 'bg-indigo-600 text-white shadow-sm font-semibold'
               : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200'
           }`}
           type="button"
@@ -90,7 +90,7 @@ export const WindyRadarEmbed: React.FC<WindyRadarEmbedProps> = ({
       </div>
 
       {/* Contenitore Mappa */}
-      <div className={`w-full ${heightClass} relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-950 shadow-xl`}>
+      <div className={`w-full ${heightClass} relative overflow-hidden rounded-3xl border border-slate-800 bg-slate-950 shadow-xl card-surface`}>
         {/* Puntino centrale sul paese */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-20 flex flex-col items-center">
           <div className="px-2 py-0.5 rounded-full bg-slate-950/90 border border-slate-700/80 text-[10px] font-bold text-slate-100 shadow-md mb-1 whitespace-nowrap flex items-center gap-1 backdrop-blur-md">
@@ -103,14 +103,13 @@ export const WindyRadarEmbed: React.FC<WindyRadarEmbedProps> = ({
           </div>
         </div>
 
-        {/* Schermo anti-trascinamento ritagliato:
-            lascia liberi l'angolo in alto a destra (dove c'è il menu Windy) e la barra in basso (Play) */}
+        {/* Schermo protettivo: impedisce lo spostamento accidentale mantenendo il puntino della città perfettamente allineato */}
         <div className="absolute inset-0 top-[60px] right-[60px] bottom-[64px] z-10 cursor-default" />
 
         <iframe
           title={`Mappa Windy - ${location.name}`}
           src={windyUrl}
-          className="w-full h-full border-0 rounded-2xl"
+          className="w-full h-full border-0 rounded-3xl"
           loading="lazy"
           allow="geolocation"
         />

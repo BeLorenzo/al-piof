@@ -1,21 +1,10 @@
 import React from 'react';
-import {
-  Wind,
-  Droplets,
-  Sun,
-  Sunrise,
-  Sunset,
-  Gauge,
-  Sparkles,
-  ArrowUp,
-  TrendingUp,
-  TrendingDown,
-  Minus,
-} from 'lucide-react';
+import { Compass, Scale } from 'lucide-react';
 import { getWmoInfo } from '../../utils/wmoCodes';
-import { getWindDirection, getWindArrowStyle } from '../../utils/windUtils';
-import { getUvInfo, getDewPointComfort } from '../../utils/meteoMath';
+import { formatTemperature } from '../../utils/meteoMath';
 import { ModelComparisonCard } from '../forecast/ModelComparisonCard';
+import { HeroBentoGrid } from './HeroBentoGrid';
+import { useAppStore } from '../../store/useAppStore';
 import type { NormalizedWeatherData } from '../../types/weather.types';
 
 interface HeroSummaryProps {
@@ -29,6 +18,7 @@ export const HeroSummary: React.FC<HeroSummaryProps> = ({
   selectedDayIndex,
   onOpenAirQuality,
 }) => {
+  const preferences = useAppStore((state) => state.preferences);
   const isToday = selectedDayIndex === 0;
   const currentDay = data.daily[selectedDayIndex] || data.daily[0];
 
@@ -36,49 +26,52 @@ export const HeroSummary: React.FC<HeroSummaryProps> = ({
   const wmo = getWmoInfo(wmoCode, isToday ? data.current.isDay : true);
   const WmoIcon = wmo.icon;
 
-  const windDir = isToday
-    ? getWindDirection(data.current.windDirection)
-    : getWindDirection(currentDay.hourly[12]?.windDirection ?? 0);
-  const windAngle = isToday
-    ? data.current.windDirection
-    : currentDay.hourly[12]?.windDirection ?? 0;
-
-  const uvInfo = getUvInfo(currentDay.uvIndexMax);
-  const dewPointVal = isToday ? data.current.dewPoint : currentDay.dewPointMax;
-  const dewComfort = getDewPointComfort(dewPointVal);
-
-  const pressureTrend = isToday ? data.current.pressureTrend : currentDay.pressureTrend;
+  const scrollToModelComparison = () => {
+    const el = document.getElementById('model-comparison-section');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
 
   return (
     <div className="px-4 py-2 space-y-2.5">
-      {/* Dynamic Smart Text Summary */}
-      <div className="p-2.5 rounded-2xl bg-sky-950/40 border border-sky-800/50 text-xs text-sky-200 flex items-start gap-2 shadow-sm">
-        <Sparkles className="w-4 h-4 text-sky-400 shrink-0 mt-0.5" />
-        <span className="leading-snug">{currentDay.summaryText}</span>
-      </div>
+      {/* Editorial Text Summary */}
+      {preferences.showTextSummary && currentDay.summaryText && (
+        <div className="p-3 rounded-2xl bg-slate-900/80 border-l-4 border-l-sky-500 border border-slate-800/80 text-xs text-slate-200 flex items-start gap-2.5 shadow-sm card-surface">
+          <Compass className="w-4 h-4 text-sky-400 shrink-0 mt-0.5" />
+          <span className="leading-snug font-medium">{currentDay.summaryText}</span>
+        </div>
+      )}
 
       {/* Main Hero Card */}
-      <div className="relative overflow-hidden bg-gradient-to-b from-slate-900/90 to-slate-900/60 border border-slate-800/90 rounded-3xl p-4 shadow-2xl backdrop-blur-md">
+      <div className="relative overflow-hidden bg-gradient-to-b from-slate-900/90 to-slate-900/60 border border-slate-800/90 rounded-3xl p-4 shadow-2xl backdrop-blur-md card-surface">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <div className="flex items-center gap-1.5 text-xs text-sky-400 font-medium mb-1">
+            <div className="flex items-center gap-1.5 text-xs text-sky-400 font-semibold mb-1">
               <span>{isToday ? 'Adesso • In tempo reale' : currentDay.dayName}</span>
             </div>
             <div className="flex items-baseline gap-2">
-              <span className="text-5xl font-extrabold text-white tracking-tighter">
-                {isToday ? `${data.current.temperature}°` : `${currentDay.tempMax}°`}
+              <span className="text-5xl font-black text-white tracking-tighter num-tabular">
+                {isToday
+                  ? formatTemperature(data.current.temperature, preferences.roundTemperatures)
+                  : formatTemperature(currentDay.tempMax, preferences.roundTemperatures)}
               </span>
-              <div className="text-xs text-slate-400">
+              <div className="text-xs text-slate-400 num-tabular">
                 {isToday ? (
                   <>
-                    <div>Percepita {data.current.apparentTemperature}°</div>
+                    <div>
+                      Percepita {formatTemperature(data.current.apparentTemperature, preferences.roundTemperatures)}
+                    </div>
                     <div className="text-slate-300 font-medium">
-                      Max {currentDay.tempMax}° • Min {currentDay.tempMin}°
+                      Max {formatTemperature(currentDay.tempMax, preferences.roundTemperatures)} • Min{' '}
+                      {formatTemperature(currentDay.tempMin, preferences.roundTemperatures)}
                     </div>
                   </>
                 ) : (
                   <>
-                    <div className="text-slate-300 font-medium">Minima: {currentDay.tempMin}°</div>
+                    <div className="text-slate-300 font-medium">
+                      Minima: {formatTemperature(currentDay.tempMin, preferences.roundTemperatures)}
+                    </div>
                     <div>Pioggia: {currentDay.precipitationSum} mm</div>
                   </>
                 )}
@@ -89,159 +82,59 @@ export const HeroSummary: React.FC<HeroSummaryProps> = ({
             </div>
           </div>
 
-          <div className="p-3 rounded-2xl bg-slate-950/40 border border-slate-800/80">
+          <div className="p-3 rounded-2xl bg-slate-950/50 border border-slate-800/80 shadow-inner">
             <WmoIcon className={`w-12 h-12 ${wmo.colorClass}`} />
           </div>
         </div>
+
+        {/* Compact In-Hero Reliability Badge */}
+        {currentDay.comparison && (
+          <div className="mt-3 pt-2.5 border-t border-slate-800/80 flex items-center justify-between text-xs">
+            <button
+              onClick={scrollToModelComparison}
+              className="flex items-center gap-1.5 text-left group"
+              type="button"
+            >
+              <Scale className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+              <span className="text-slate-400 group-hover:text-slate-200 transition-colors">
+                Affidabilità Modelli:
+              </span>
+              <span
+                className={`font-bold flex items-center gap-1 px-1.5 py-0.2 rounded text-[11px] ${
+                  currentDay.comparison.overallReliability === 'Alta'
+                    ? 'text-emerald-400 bg-emerald-950/60 border border-emerald-800/60'
+                    : currentDay.comparison.overallReliability === 'Media'
+                    ? 'text-yellow-400 bg-yellow-950/60 border border-yellow-800/60'
+                    : 'text-orange-400 bg-orange-950/60 border border-orange-800/60'
+                }`}
+              >
+                {currentDay.comparison.overallReliability} ({currentDay.comparison.overallScore}%)
+              </span>
+            </button>
+
+            <span className="text-[11px] text-slate-400 num-tabular">
+              Spread &Delta; {currentDay.comparison.tempMax.spread}&deg;C
+            </span>
+          </div>
+        )}
       </div>
 
-      {/* Multi-Model Comparison & Reliability Badge */}
-      <ModelComparisonCard
-        comparison={currentDay.comparison}
-        dayName={isToday ? 'Oggi' : currentDay.dayName}
+      {/* Multi-Model Comparison Card */}
+      {preferences.showModelComparison && (
+        <div id="model-comparison-section">
+          <ModelComparisonCard
+            comparison={currentDay.comparison}
+            dayName={isToday ? 'Oggi' : currentDay.dayName}
+          />
+        </div>
+      )}
+
+      {/* Bento Grid */}
+      <HeroBentoGrid
+        data={data}
+        selectedDayIndex={selectedDayIndex}
+        onOpenAirQuality={onOpenAirQuality}
       />
-
-      {/* Bento Grid (2x3) */}
-      <div className="grid grid-cols-2 gap-2">
-        {/* 1. Qualità dell'Aria */}
-        <button
-          onClick={onOpenAirQuality}
-          className="p-3 bg-slate-900/70 border border-slate-800/90 rounded-2xl text-left hover:border-slate-700 transition-colors group"
-        >
-          <div className="flex items-center justify-between text-slate-400 mb-1">
-            <span className="text-[11px] font-medium">Qualità Aria</span>
-            <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-          </div>
-          {data.airQuality ? (
-            <div>
-              <div className="text-base font-bold text-white">
-                EAQI {data.airQuality.europeanAqi}
-              </div>
-              <div className="text-[11px] flex items-center justify-between mt-0.5">
-                <span className={`font-semibold ${data.airQuality.colorClass}`}>
-                  {data.airQuality.label}
-                </span>
-                <span className="text-sky-400 group-hover:underline text-[10px]">
-                  Pollini &rarr;
-                </span>
-              </div>
-            </div>
-          ) : (
-            <div className="text-xs text-slate-500">Non disponibile</div>
-          )}
-        </button>
-
-        {/* 2. Pressione & Punto di Rugiada */}
-        <div className="p-3 bg-slate-900/70 border border-slate-800/90 rounded-2xl">
-          <div className="flex items-center justify-between text-slate-400 mb-1">
-            <span className="text-[11px] font-medium">Pressione &amp; Rugiada</span>
-            <Gauge className="w-3.5 h-3.5 text-sky-400" />
-          </div>
-          <div className="flex items-center gap-1.5 text-base font-bold text-white">
-            <span>{isToday ? data.current.surfacePressure : currentDay.pressureAvg} hPa</span>
-            {pressureTrend === 'rising' ? (
-              <span title="In aumento">
-                <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
-              </span>
-            ) : pressureTrend === 'falling' ? (
-              <span title="In calo">
-                <TrendingDown className="w-3.5 h-3.5 text-rose-400" />
-              </span>
-            ) : (
-              <span title="Stabile">
-                <Minus className="w-3.5 h-3.5 text-slate-400" />
-              </span>
-            )}
-          </div>
-          <div className="text-[11px] text-slate-400 mt-0.5 truncate">
-            Rugiada {dewPointVal}° • <span className={`font-medium ${dewComfort.colorClass}`}>{dewComfort.label}</span>
-          </div>
-        </div>
-
-        {/* 3. Vento & Raffiche */}
-        <div className="p-3 bg-slate-900/70 border border-slate-800/90 rounded-2xl">
-          <div className="flex items-center justify-between text-slate-400 mb-1">
-            <span className="text-[11px] font-medium">Vento</span>
-            <Wind className="w-3.5 h-3.5 text-cyan-400" />
-          </div>
-          <div className="flex items-center gap-1.5 text-base font-bold text-white">
-            <span style={getWindArrowStyle(windAngle)} className="inline-block">
-              <ArrowUp className="w-4 h-4 text-cyan-400" />
-            </span>
-            <span>
-              {isToday ? `${data.current.windSpeed} km/h` : `${currentDay.windSpeedMax} km/h`}
-            </span>
-          </div>
-          <div className="text-[11px] text-slate-400 mt-0.5 truncate">
-            {isToday ? `${windDir} • Raffica ${data.current.windGusts} km/h` : `Raffica ${currentDay.windGustsMax} km/h`}
-          </div>
-        </div>
-
-        {/* 4. Umidità Relativa */}
-        <div className="p-3 bg-slate-900/70 border border-slate-800/90 rounded-2xl">
-          <div className="flex items-center justify-between text-slate-400 mb-1">
-            <span className="text-[11px] font-medium">Umidità</span>
-            <Droplets className="w-3.5 h-3.5 text-blue-400" />
-          </div>
-          <div className="text-base font-bold text-white">
-            {isToday ? `${data.current.relativeHumidity}%` : `${currentDay.hourly[12]?.relativeHumidity ?? 60}%`}
-          </div>
-          <div className="w-full bg-slate-800 h-1.5 rounded-full mt-2 overflow-hidden">
-            <div
-              className="bg-blue-400 h-full rounded-full"
-              style={{
-                width: `${isToday ? data.current.relativeHumidity : currentDay.hourly[12]?.relativeHumidity ?? 60}%`,
-              }}
-            />
-          </div>
-        </div>
-
-        {/* 5. Indice UV su scala /11 OMS */}
-        <div className="p-3 bg-slate-900/70 border border-slate-800/90 rounded-2xl">
-          <div className="flex items-center justify-between text-slate-400 mb-1">
-            <span className="text-[11px] font-medium">Indice UV Max</span>
-            <Sun className="w-3.5 h-3.5 text-amber-400" />
-          </div>
-          <div className="text-base font-bold text-white">
-            {uvInfo.ratioText}
-          </div>
-          <div className="w-full bg-slate-800 h-1.5 rounded-full mt-1.5 overflow-hidden">
-            <div
-              className={`h-full rounded-full ${uvInfo.bgClass}`}
-              style={{ width: `${uvInfo.progressPct}%` }}
-            />
-          </div>
-          <div className={`text-[10px] font-semibold mt-1 ${uvInfo.colorClass}`}>
-            {uvInfo.label}
-          </div>
-        </div>
-
-        {/* 6. Sole & Luna */}
-        <div className="p-3 bg-slate-900/70 border border-slate-800/90 rounded-2xl">
-          <div className="flex items-center justify-between text-[11px] text-slate-400 mb-1">
-            <span className="font-medium">Sole &amp; Luna</span>
-            <span className="text-xs" title={currentDay.moon.phaseName}>
-              {currentDay.moon.phaseIcon}
-            </span>
-          </div>
-          <div className="flex items-center justify-between text-xs font-semibold text-slate-100">
-            <div className="flex items-center gap-1">
-              <Sunrise className="w-3.5 h-3.5 text-amber-300" />
-              <span>{currentDay.sunrise}</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <Sunset className="w-3.5 h-3.5 text-orange-400" />
-              <span>{currentDay.sunset}</span>
-            </div>
-          </div>
-          <div className="flex items-center justify-between text-[10px] text-slate-400 mt-1">
-            <span>{currentDay.moon.phaseName}</span>
-            <span className="text-slate-300 font-medium">
-              {currentDay.moon.illuminationPct}% luce
-            </span>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };

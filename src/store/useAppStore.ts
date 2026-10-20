@@ -4,6 +4,7 @@ import type {
   Location,
   WeatherModel,
   ViewMode,
+  UserPreferences,
 } from '../types/weather.types';
 
 export const DEFAULT_FALLBACK_LOCATION: Location = {
@@ -18,8 +19,42 @@ export const DEFAULT_FALLBACK_LOCATION: Location = {
   population: 1395274,
 };
 
-// Nessun dato personale cablato nel repo: i preferiti partono vuoti e si salvano nel localStorage
 export const DEFAULT_FAVORITES: Location[] = [];
+
+export const DEFAULT_PREFERENCES: UserPreferences = {
+  theme: 'dynamic',
+  customBgColor: '#fce7f3',
+  accentColor: 'sky',
+  customAccentColor: '#f43f5e',
+  font: 'technical',
+  surfaceStyle: 'glass',
+  useEnsembleAverageInBlend: true,
+  roundTemperatures: false,
+  windUnit: 'kmh',
+  defaultFilterFromNow: false,
+  compactHourlyRows: false,
+  showTextSummary: true,
+  showModelComparison: true,
+  showHistoricalAlmanac: true,
+  showBottomRadarPreview: true,
+  visibleBentoCards: [
+    'visibility',
+    'airQuality',
+    'pressureDew',
+    'wind',
+    'humidity',
+    'uv',
+    'sunMoon',
+    'cloudSun',
+  ],
+};
+
+const VALID_MODELS: WeatherModel[] = [
+  'best_match',
+  'meteoswiss_icon_ch2',
+  'ecmwf_ifs025',
+  'icon_d2',
+];
 
 interface AppState {
   selectedLocation: Location;
@@ -27,6 +62,8 @@ interface AppState {
   selectedModel: WeatherModel;
   selectedDayIndex: number;
   viewMode: ViewMode;
+  preferences: UserPreferences;
+  isSettingsOpen: boolean;
 
   // Actions
   setSelectedLocation: (loc: Location) => void;
@@ -35,6 +72,9 @@ interface AppState {
   setViewMode: (mode: ViewMode) => void;
   toggleFavorite: (loc: Location) => void;
   isFavorite: (locId: string) => boolean;
+  updatePreferences: (partial: Partial<UserPreferences>) => void;
+  resetPreferences: () => void;
+  setIsSettingsOpen: (isOpen: boolean) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -45,11 +85,27 @@ export const useAppStore = create<AppState>()(
       selectedModel: 'best_match',
       selectedDayIndex: 0,
       viewMode: 'hourly',
+      preferences: DEFAULT_PREFERENCES,
+      isSettingsOpen: false,
 
       setSelectedLocation: (loc) => set({ selectedLocation: loc, selectedDayIndex: 0 }),
-      setSelectedModel: (model) => set({ selectedModel: model }),
+      setSelectedModel: (model) => {
+        const safeModel = VALID_MODELS.includes(model) ? model : 'best_match';
+        set({ selectedModel: safeModel });
+      },
       setSelectedDayIndex: (index) => set({ selectedDayIndex: index }),
       setViewMode: (mode) => set({ viewMode: mode }),
+      setIsSettingsOpen: (isOpen) => set({ isSettingsOpen: isOpen }),
+
+      updatePreferences: (partial) => {
+        set((state) => ({
+          preferences: { ...state.preferences, ...partial },
+        }));
+      },
+
+      resetPreferences: () => {
+        set({ preferences: DEFAULT_PREFERENCES });
+      },
 
       toggleFavorite: (loc) => {
         const { favorites } = get();
@@ -70,11 +126,36 @@ export const useAppStore = create<AppState>()(
     {
       name: 'al-piof-storage',
       storage: createJSONStorage(() => localStorage),
+      // Migrazione automatica: ripulisce 'ensemble' e assicura tutte le chiavi preferences
+      merge: (persistedState: unknown, currentState: AppState) => {
+        if (!persistedState || typeof persistedState !== 'object') {
+          return currentState;
+        }
+
+        const stateObj = persistedState as Partial<AppState>;
+        const safeModel =
+          stateObj.selectedModel && VALID_MODELS.includes(stateObj.selectedModel)
+            ? stateObj.selectedModel
+            : 'best_match';
+
+        const mergedPrefs: UserPreferences = {
+          ...DEFAULT_PREFERENCES,
+          ...(stateObj.preferences || {}),
+        };
+
+        return {
+          ...currentState,
+          ...stateObj,
+          selectedModel: safeModel,
+          preferences: mergedPrefs,
+        };
+      },
       partialize: (state) => ({
         selectedLocation: state.selectedLocation,
         favorites: state.favorites,
         selectedModel: state.selectedModel,
         viewMode: state.viewMode,
+        preferences: state.preferences,
       }),
     }
   )
