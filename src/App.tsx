@@ -67,7 +67,10 @@ export default function App() {
         <RefreshStatusBar
           updatedAt={data?.updatedAt}
           isFetching={isFetching}
-          onRefresh={() => refetch()}
+          onRefresh={() => {
+            refetch();
+            window.dispatchEvent(new CustomEvent('alpiof:check-update'));
+          }}
         />
 
         {/* In-App Update Notification Banner */}

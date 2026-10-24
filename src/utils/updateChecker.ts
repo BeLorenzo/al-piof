@@ -1,7 +1,8 @@
 export const CURRENT_APP_VERSION = '1.0.1';
 const GITHUB_REPO = 'BeLorenzo/al-piof';
 const CACHE_KEY = 'alpiof_update_check';
-const CACHE_TTL_MS = 2 * 60 * 60 * 1000; // 2 ore
+const CACHE_NEGATIVE_TTL_MS = 60 * 1000; // Solo 1 minuto se non ci sono aggiornamenti
+const CACHE_POSITIVE_TTL_MS = 15 * 60 * 1000; // 15 minuti se trovato aggiornamento
 
 export interface UpdateInfo {
   hasUpdate: boolean;
@@ -17,7 +18,7 @@ function parseSemver(v: string): number[] {
   return clean.split('.').map((n) => parseInt(n, 10) || 0);
 }
 
-function isNewer(latest: string, current: string): boolean {
+export function isNewer(latest: string, current: string): boolean {
   const [lMajor = 0, lMinor = 0, lPatch = 0] = parseSemver(latest);
   const [cMajor = 0, cMinor = 0, cPatch = 0] = parseSemver(current);
 
@@ -28,54 +29,84 @@ function isNewer(latest: string, current: string): boolean {
   return lPatch > cPatch;
 }
 
-export async function checkForAppUpdates(): Promise<UpdateInfo | null> {
+export async function checkForAppUpdates(force = false): Promise<UpdateInfo | null> {
   try {
-    // Controllo cache per evitare rate-limit GitHub
-    const cached = localStorage.getItem(CACHE_KEY);
-    if (cached) {
-      try {
-        const parsed = JSON.parse(cached);
-        if (Date.now() - parsed.timestamp < CACHE_TTL_MS) {
-          return parsed.data as UpdateInfo;
+    // Controllo cache se non forzato
+    if (!force) {
+      const cached = localStorage.getItem(CACHE_KEY);
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          const ttl = parsed.data?.hasUpdate ? CACHE_POSITIVE_TTL_MS : CACHE_NEGATIVE_TTL_MS;
+          if (Date.now() - parsed.timestamp < ttl) {
+            return parsed.data as UpdateInfo;
+          }
+        } catch {
+          // ignora errore cache
         }
-      } catch {
-        // ignora errore cache
       }
     }
 
-    const response = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/releases/latest`, {
-      headers: {
-        Accept: 'application/vnd.github.v3+json',
-      },
-    });
+    let latestTag = '';
+    let releaseUrl = `https://github.com/${GITHUB_REPO}/releases`;
+    let apkDownloadUrl: string | undefined;
+    let releaseNotes: string | undefined;
 
-    if (!response.ok) {
+    // 1. Prova API GitHub Releases per ottenere link APK diretto e note di rilascio
+    try {
+      const response = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/releases/latest`, {
+        headers: { Accept: 'application/vnd.github.v3+json' },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        latestTag = data.tag_name || '';
+        releaseUrl = data.html_url || releaseUrl;
+        releaseNotes = data.body || '';
+
+        if (Array.isArray(data.assets)) {
+          const apkAsset = data.assets.find(
+            (a: { name: string; browser_download_url: string }) => a.name.endsWith('.apk')
+          );
+          if (apkAsset) {
+            apkDownloadUrl = apkAsset.browser_download_url;
+          }
+        }
+      }
+    } catch (apiErr) {
+      console.warn('[UpdateChecker] GitHub API non raggiungibile, provo fallback statico:', apiErr);
+    }
+
+    // 2. Fallback statico su raw.githubusercontent.com (zero rate-limit) se l'API è bloccata o 403
+    if (!latestTag) {
+      try {
+        const rawRes = await fetch(
+          `https://raw.githubusercontent.com/${GITHUB_REPO}/main/package.json?t=${Date.now()}`
+        );
+        if (rawRes.ok) {
+          const pkg = await rawRes.json();
+          if (pkg.version) {
+            latestTag = `v${pkg.version}`;
+            apkDownloadUrl = `https://github.com/${GITHUB_REPO}/releases/latest`;
+          }
+        }
+      } catch (rawErr) {
+        console.warn('[UpdateChecker] Fallback statico fallito:', rawErr);
+      }
+    }
+
+    if (!latestTag) {
       return null;
     }
 
-    const data = await response.json();
-    const latestTag = data.tag_name || '';
     const hasUpdate = isNewer(latestTag, CURRENT_APP_VERSION);
-
-    // Cerca l'asset APK se disponibile tra gli allegati della release
-    let apkDownloadUrl: string | undefined;
-    if (Array.isArray(data.assets)) {
-      const apkAsset = data.assets.find(
-        (a: { name: string; browser_download_url: string }) =>
-          a.name.endsWith('.apk')
-      );
-      if (apkAsset) {
-        apkDownloadUrl = apkAsset.browser_download_url;
-      }
-    }
-
     const updateInfo: UpdateInfo = {
       hasUpdate,
       currentVersion: CURRENT_APP_VERSION,
       latestVersion: latestTag.replace(/^v/i, ''),
-      releaseUrl: data.html_url || `https://github.com/${GITHUB_REPO}/releases`,
-      apkDownloadUrl: apkDownloadUrl || data.html_url,
-      releaseNotes: data.body,
+      releaseUrl,
+      apkDownloadUrl: apkDownloadUrl || releaseUrl,
+      releaseNotes,
     };
 
     localStorage.setItem(

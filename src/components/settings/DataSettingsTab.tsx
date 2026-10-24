@@ -1,5 +1,6 @@
 import React from 'react';
 import { useAppStore } from '../../store/useAppStore';
+import { CURRENT_APP_VERSION } from '../../utils/updateChecker';
 import type { WindUnit } from '../../types/weather.types';
 
 export const DataSettingsTab: React.FC = () => {
@@ -99,6 +100,28 @@ export const DataSettingsTab: React.FC = () => {
           onChange={(e) => updatePreferences({ compactHourlyRows: e.target.checked })}
           className="w-4 h-4 accent-sky-500 cursor-pointer shrink-0 rounded"
         />
+      </div>
+
+      {/* Controllo Aggiornamenti & Versione */}
+      <div className="p-3 rounded-2xl bg-slate-950/50 border border-slate-800 flex items-center justify-between gap-3">
+        <div>
+          <div className="text-xs font-bold text-white flex items-center gap-1.5">
+            <span>Versione App</span>
+            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-800 text-sky-300 font-mono">
+              v{CURRENT_APP_VERSION}
+            </span>
+          </div>
+          <div className="text-[11px] text-slate-400 leading-snug mt-0.5">
+            Verifica la disponibilità di nuovi aggiornamenti APK.
+          </div>
+        </div>
+        <button
+          onClick={() => window.dispatchEvent(new CustomEvent('alpiof:check-update', { detail: { force: true } }))}
+          type="button"
+          className="px-3 py-1.5 rounded-xl bg-sky-500/20 border border-sky-400/40 text-sky-300 hover:bg-sky-500/30 text-xs font-semibold shrink-0 transition-colors active:scale-95"
+        >
+          Verifica
+        </button>
       </div>
     </div>
   );
