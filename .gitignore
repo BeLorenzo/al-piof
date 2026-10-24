@@ -38,3 +38,7 @@ android/captures/
 *.apk
 *.aab
 /*.png
+
+# Agent playbooks & internal skills
+AGENT_PLAYBOOK.md
+.agents/

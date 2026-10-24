@@ -1,4 +1,4 @@
-export const CURRENT_APP_VERSION = '1.0.0';
+export const CURRENT_APP_VERSION = '1.0.1';
 const GITHUB_REPO = 'BeLorenzo/al-piof';
 const CACHE_KEY = 'alpiof_update_check';
 const CACHE_TTL_MS = 2 * 60 * 60 * 1000; // 2 ore
