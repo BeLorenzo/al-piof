@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ArrowDownToLine, X, Sparkles } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
-import { checkForAppUpdates, UpdateInfo } from '../../utils/updateChecker';
+import { checkForAppUpdates, CURRENT_APP_VERSION, isNewer, UpdateInfo } from '../../utils/updateChecker';
 import { openExternalUrl } from '../../utils/widgetBridge';
 
 export const UpdateNotificationBanner: React.FC = () => {
@@ -17,9 +17,11 @@ export const UpdateNotificationBanner: React.FC = () => {
     let mounted = true;
     const runCheck = (force = false) => {
       checkForAppUpdates(force).then((res) => {
-        if (mounted && res && res.hasUpdate) {
+        if (mounted && res && res.hasUpdate && isNewer(res.latestVersion, CURRENT_APP_VERSION)) {
           setUpdate(res);
           setIsDismissed(false);
+        } else if (mounted) {
+          setUpdate(null);
         }
       });
     };
@@ -35,11 +37,18 @@ export const UpdateNotificationBanner: React.FC = () => {
     };
   }, []);
 
-  if (!Capacitor.isNativePlatform() || !update || !update.hasUpdate || isDismissed) {
+  if (
+    !Capacitor.isNativePlatform() ||
+    !update ||
+    !update.hasUpdate ||
+    !isNewer(update.latestVersion, CURRENT_APP_VERSION) ||
+    isDismissed
+  ) {
     return null;
   }
 
   const handleDownload = () => {
+    localStorage.removeItem('alpiof_update_check');
     const targetUrl = update.apkDownloadUrl || update.releaseUrl;
     openExternalUrl(targetUrl);
   };

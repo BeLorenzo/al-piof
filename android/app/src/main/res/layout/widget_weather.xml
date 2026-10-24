@@ -5,10 +5,10 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="@drawable/widget_bg_dark"
-    android:paddingStart="12dp"
-    android:paddingEnd="12dp"
-    android:paddingTop="8dp"
-    android:paddingBottom="8dp">
+    android:paddingStart="10dp"
+    android:paddingEnd="10dp"
+    android:paddingTop="6dp"
+    android:paddingBottom="6dp">
 
     <!-- 1. Top Section: City & Condition on Left, Icon & Temperature on Right -->
     <LinearLayout
@@ -31,8 +31,9 @@
                 android:layout_height="wrap_content"
                 android:text="Milano"
                 android:textColor="#38BDF8"
-                android:textSize="13sp"
+                android:textSize="12.5sp"
                 android:textStyle="bold"
+                android:includeFontPadding="false"
                 android:maxLines="1"
                 android:ellipsize="end" />
 
@@ -42,7 +43,8 @@
                 android:layout_height="wrap_content"
                 android:text="Cielo sereno • Max 16° Min 6°"
                 android:textColor="#CBD5E1"
-                android:textSize="10sp"
+                android:textSize="9.5sp"
+                android:includeFontPadding="false"
                 android:maxLines="1"
                 android:ellipsize="end"
                 android:layout_marginTop="1dp" />
@@ -60,7 +62,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="☀️"
-                android:textSize="24sp"
+                android:textSize="21sp"
                 android:includeFontPadding="false"
                 android:paddingEnd="4dp" />
 
@@ -76,7 +78,7 @@
                     android:layout_height="wrap_content"
                     android:text="15.5°"
                     android:textColor="#F1F5F9"
-                    android:textSize="22sp"
+                    android:textSize="19.5sp"
                     android:textStyle="bold"
                     android:includeFontPadding="false" />
 
@@ -86,7 +88,8 @@
                     android:layout_height="wrap_content"
                     android:text="12:50"
                     android:textColor="#94A3B8"
-                    android:textSize="9sp" />
+                    android:includeFontPadding="false"
+                    android:textSize="8.5sp" />
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>
@@ -98,7 +101,7 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:layout_marginTop="5dp">
+        android:layout_marginTop="3dp">
 
         <!-- Rain Chip -->
         <LinearLayout
@@ -235,14 +238,14 @@
         </LinearLayout>
     </LinearLayout>
 
-    <!-- 3. Default 4-Hour Forecast Strip (Always visible in 4x2 base widget) -->
+    <!-- 3. Default 4-Hour Forecast Strip (Always visible in 4x1 base widget) -->
     <LinearLayout
         android:id="@+id/layout_hourly_strip"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center"
-        android:layout_marginTop="6dp"
+        android:layout_marginTop="3.5dp"
         android:visibility="visible">
 
         <!-- Hour 1 -->
@@ -252,9 +255,9 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="center">
-            <TextView android:id="@+id/tv_h1_time" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="13:00" android:textSize="9sp" android:textColor="#94A3B8" />
-            <TextView android:id="@+id/tv_h1_icon" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="☀️" android:textSize="12sp" android:includeFontPadding="false" />
-            <TextView android:id="@+id/tv_h1_temp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="16°" android:textSize="10sp" android:textStyle="bold" android:textColor="#F1F5F9" />
+            <TextView android:id="@+id/tv_h1_time" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="13:00" android:textSize="8.5sp" android:includeFontPadding="false" android:textColor="#94A3B8" />
+            <TextView android:id="@+id/tv_h1_icon" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="☀️" android:textSize="11.5sp" android:includeFontPadding="false" />
+            <TextView android:id="@+id/tv_h1_temp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="16°" android:textSize="9.5sp" android:includeFontPadding="false" android:textStyle="bold" android:textColor="#F1F5F9" />
         </LinearLayout>
 
         <!-- Hour 2 -->
@@ -264,9 +267,9 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="center">
-            <TextView android:id="@+id/tv_h2_time" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="14:00" android:textSize="9sp" android:textColor="#94A3B8" />
-            <TextView android:id="@+id/tv_h2_icon" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="☀️" android:textSize="12sp" android:includeFontPadding="false" />
-            <TextView android:id="@+id/tv_h2_temp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="16°" android:textSize="10sp" android:textStyle="bold" android:textColor="#F1F5F9" />
+            <TextView android:id="@+id/tv_h2_time" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="14:00" android:textSize="8.5sp" android:includeFontPadding="false" android:textColor="#94A3B8" />
+            <TextView android:id="@+id/tv_h2_icon" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="☀️" android:textSize="11.5sp" android:includeFontPadding="false" />
+            <TextView android:id="@+id/tv_h2_temp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="16°" android:textSize="9.5sp" android:includeFontPadding="false" android:textStyle="bold" android:textColor="#F1F5F9" />
         </LinearLayout>
 
         <!-- Hour 3 -->
@@ -276,9 +279,9 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="center">
-            <TextView android:id="@+id/tv_h3_time" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="15:00" android:textSize="9sp" android:textColor="#94A3B8" />
-            <TextView android:id="@+id/tv_h3_icon" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="☀️" android:textSize="12sp" android:includeFontPadding="false" />
-            <TextView android:id="@+id/tv_h3_temp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="16°" android:textSize="10sp" android:textStyle="bold" android:textColor="#F1F5F9" />
+            <TextView android:id="@+id/tv_h3_time" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="15:00" android:textSize="8.5sp" android:includeFontPadding="false" android:textColor="#94A3B8" />
+            <TextView android:id="@+id/tv_h3_icon" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="☀️" android:textSize="11.5sp" android:includeFontPadding="false" />
+            <TextView android:id="@+id/tv_h3_temp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="16°" android:textSize="9.5sp" android:includeFontPadding="false" android:textStyle="bold" android:textColor="#F1F5F9" />
         </LinearLayout>
 
         <!-- Hour 4 -->
@@ -288,19 +291,19 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="center">
-            <TextView android:id="@+id/tv_h4_time" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="16:00" android:textSize="9sp" android:textColor="#94A3B8" />
-            <TextView android:id="@+id/tv_h4_icon" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="☀️" android:textSize="12sp" android:includeFontPadding="false" />
-            <TextView android:id="@+id/tv_h4_temp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="15°" android:textSize="10sp" android:textStyle="bold" android:textColor="#F1F5F9" />
+            <TextView android:id="@+id/tv_h4_time" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="16:00" android:textSize="8.5sp" android:includeFontPadding="false" android:textColor="#94A3B8" />
+            <TextView android:id="@+id/tv_h4_icon" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="☀️" android:textSize="11.5sp" android:includeFontPadding="false" />
+            <TextView android:id="@+id/tv_h4_temp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="15°" android:textSize="9.5sp" android:includeFontPadding="false" android:textStyle="bold" android:textColor="#F1F5F9" />
         </LinearLayout>
     </LinearLayout>
 
-    <!-- 4. Expanded Multi-Day Forecast Section (Automatically visible when resized to 4x3 or 4x4) -->
+    <!-- 4. Expanded Multi-Day Forecast Section (Automatically visible when resized to 4x2 or taller) -->
     <LinearLayout
         android:id="@+id/layout_daily_section"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:layout_marginTop="7dp"
+        android:layout_marginTop="4dp"
         android:visibility="gone">
 
         <!-- Day +1 -->
@@ -310,12 +313,12 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:paddingTop="2dp"
-            android:paddingBottom="2dp">
-            <TextView android:id="@+id/tv_d1_day" android:layout_width="58dp" android:layout_height="wrap_content" android:text="Dom 25" android:textSize="10sp" android:textStyle="bold" android:textColor="#F1F5F9" android:maxLines="1" />
-            <TextView android:id="@+id/tv_d1_desc" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="⛅ Parz. nuvoloso" android:textSize="10sp" android:textColor="#CBD5E1" android:maxLines="1" android:ellipsize="end" android:paddingEnd="4dp" />
-            <TextView android:id="@+id/tv_d1_rain" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="💧 10%" android:textSize="9.5sp" android:textColor="#38BDF8" android:paddingEnd="8dp" />
-            <TextView android:id="@+id/tv_d1_temp" android:layout_width="46dp" android:layout_height="wrap_content" android:gravity="end" android:text="17° / 8°" android:textSize="10sp" android:textStyle="bold" android:textColor="#F1F5F9" />
+            android:paddingTop="1dp"
+            android:paddingBottom="1dp">
+            <TextView android:id="@+id/tv_d1_day" android:layout_width="56dp" android:layout_height="wrap_content" android:text="Dom 25" android:textSize="9.5sp" android:includeFontPadding="false" android:textStyle="bold" android:textColor="#F1F5F9" android:maxLines="1" />
+            <TextView android:id="@+id/tv_d1_desc" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="⛅ Parz. nuvoloso" android:textSize="9.5sp" android:includeFontPadding="false" android:textColor="#CBD5E1" android:maxLines="1" android:ellipsize="end" android:paddingEnd="4dp" />
+            <TextView android:id="@+id/tv_d1_rain" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="💧 10%" android:textSize="9sp" android:includeFontPadding="false" android:textColor="#38BDF8" android:paddingEnd="6dp" />
+            <TextView android:id="@+id/tv_d1_temp" android:layout_width="44dp" android:layout_height="wrap_content" android:gravity="end" android:text="17° / 8°" android:textSize="9.5sp" android:includeFontPadding="false" android:textStyle="bold" android:textColor="#F1F5F9" />
         </LinearLayout>
 
         <!-- Day +2 -->
@@ -325,12 +328,12 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:paddingTop="2dp"
-            android:paddingBottom="2dp">
-            <TextView android:id="@+id/tv_d2_day" android:layout_width="58dp" android:layout_height="wrap_content" android:text="Lun 26" android:textSize="10sp" android:textStyle="bold" android:textColor="#F1F5F9" android:maxLines="1" />
-            <TextView android:id="@+id/tv_d2_desc" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="☀️ Cielo sereno" android:textSize="10sp" android:textColor="#CBD5E1" android:maxLines="1" android:ellipsize="end" android:paddingEnd="4dp" />
-            <TextView android:id="@+id/tv_d2_rain" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="" android:textSize="9.5sp" android:textColor="#38BDF8" android:paddingEnd="8dp" />
-            <TextView android:id="@+id/tv_d2_temp" android:layout_width="46dp" android:layout_height="wrap_content" android:gravity="end" android:text="18° / 7°" android:textSize="10sp" android:textStyle="bold" android:textColor="#F1F5F9" />
+            android:paddingTop="1dp"
+            android:paddingBottom="1dp">
+            <TextView android:id="@+id/tv_d2_day" android:layout_width="56dp" android:layout_height="wrap_content" android:text="Lun 26" android:textSize="9.5sp" android:includeFontPadding="false" android:textStyle="bold" android:textColor="#F1F5F9" android:maxLines="1" />
+            <TextView android:id="@+id/tv_d2_desc" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="☀️ Cielo sereno" android:textSize="9.5sp" android:includeFontPadding="false" android:textColor="#CBD5E1" android:maxLines="1" android:ellipsize="end" android:paddingEnd="4dp" />
+            <TextView android:id="@+id/tv_d2_rain" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="" android:textSize="9sp" android:includeFontPadding="false" android:textColor="#38BDF8" android:paddingEnd="6dp" />
+            <TextView android:id="@+id/tv_d2_temp" android:layout_width="44dp" android:layout_height="wrap_content" android:gravity="end" android:text="18° / 7°" android:textSize="9.5sp" android:includeFontPadding="false" android:textStyle="bold" android:textColor="#F1F5F9" />
         </LinearLayout>
 
         <!-- Day +3 -->
@@ -340,44 +343,42 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:paddingTop="2dp"
-            android:paddingBottom="2dp">
-            <TextView android:id="@+id/tv_d3_day" android:layout_width="58dp" android:layout_height="wrap_content" android:text="Mar 27" android:textSize="10sp" android:textStyle="bold" android:textColor="#F1F5F9" android:maxLines="1" />
-            <TextView android:id="@+id/tv_d3_desc" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="☀️ Cielo sereno" android:textSize="10sp" android:textColor="#CBD5E1" android:maxLines="1" android:ellipsize="end" android:paddingEnd="4dp" />
-            <TextView android:id="@+id/tv_d3_rain" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="" android:textSize="9.5sp" android:textColor="#38BDF8" android:paddingEnd="8dp" />
-            <TextView android:id="@+id/tv_d3_temp" android:layout_width="46dp" android:layout_height="wrap_content" android:gravity="end" android:text="18° / 8°" android:textSize="10sp" android:textStyle="bold" android:textColor="#F1F5F9" />
+            android:paddingTop="1dp"
+            android:paddingBottom="1dp">
+            <TextView android:id="@+id/tv_d3_day" android:layout_width="56dp" android:layout_height="wrap_content" android:text="Mar 27" android:textSize="9.5sp" android:includeFontPadding="false" android:textStyle="bold" android:textColor="#F1F5F9" android:maxLines="1" />
+            <TextView android:id="@+id/tv_d3_desc" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="☀️ Cielo sereno" android:textSize="9.5sp" android:includeFontPadding="false" android:textColor="#CBD5E1" android:maxLines="1" android:ellipsize="end" android:paddingEnd="4dp" />
+            <TextView android:id="@+id/tv_d3_rain" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="" android:textSize="9sp" android:includeFontPadding="false" android:textColor="#38BDF8" android:paddingEnd="6dp" />
+            <TextView android:id="@+id/tv_d3_temp" android:layout_width="44dp" android:layout_height="wrap_content" android:gravity="end" android:text="18° / 8°" android:textSize="9.5sp" android:includeFontPadding="false" android:textStyle="bold" android:textColor="#F1F5F9" />
         </LinearLayout>
 
-        <!-- Day +4 (Visible in 4x4) -->
+        <!-- Day +4 -->
         <LinearLayout
             android:id="@+id/row_day_4"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:paddingTop="2dp"
-            android:paddingBottom="2dp"
-            android:visibility="gone">
-            <TextView android:id="@+id/tv_d4_day" android:layout_width="58dp" android:layout_height="wrap_content" android:text="Mer 28" android:textSize="10sp" android:textStyle="bold" android:textColor="#F1F5F9" android:maxLines="1" />
-            <TextView android:id="@+id/tv_d4_desc" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="⛅ Poco nuvoloso" android:textSize="10sp" android:textColor="#CBD5E1" android:maxLines="1" android:ellipsize="end" android:paddingEnd="4dp" />
-            <TextView android:id="@+id/tv_d4_rain" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="💧 15%" android:textSize="9.5sp" android:textColor="#38BDF8" android:paddingEnd="8dp" />
-            <TextView android:id="@+id/tv_d4_temp" android:layout_width="46dp" android:layout_height="wrap_content" android:gravity="end" android:text="16° / 7°" android:textSize="10sp" android:textStyle="bold" android:textColor="#F1F5F9" />
+            android:paddingTop="1dp"
+            android:paddingBottom="1dp">
+            <TextView android:id="@+id/tv_d4_day" android:layout_width="56dp" android:layout_height="wrap_content" android:text="Mer 28" android:textSize="9.5sp" android:includeFontPadding="false" android:textStyle="bold" android:textColor="#F1F5F9" android:maxLines="1" />
+            <TextView android:id="@+id/tv_d4_desc" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="⛅ Poco nuvoloso" android:textSize="9.5sp" android:includeFontPadding="false" android:textColor="#CBD5E1" android:maxLines="1" android:ellipsize="end" android:paddingEnd="4dp" />
+            <TextView android:id="@+id/tv_d4_rain" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="💧 15%" android:textSize="9sp" android:includeFontPadding="false" android:textColor="#38BDF8" android:paddingEnd="6dp" />
+            <TextView android:id="@+id/tv_d4_temp" android:layout_width="44dp" android:layout_height="wrap_content" android:gravity="end" android:text="16° / 7°" android:textSize="9.5sp" android:includeFontPadding="false" android:textStyle="bold" android:textColor="#F1F5F9" />
         </LinearLayout>
 
-        <!-- Day +5 (Visible in 4x4) -->
+        <!-- Day +5 -->
         <LinearLayout
             android:id="@+id/row_day_5"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:paddingTop="2dp"
-            android:paddingBottom="2dp"
-            android:visibility="gone">
-            <TextView android:id="@+id/tv_d5_day" android:layout_width="58dp" android:layout_height="wrap_content" android:text="Gio 29" android:textSize="10sp" android:textStyle="bold" android:textColor="#F1F5F9" android:maxLines="1" />
-            <TextView android:id="@+id/tv_d5_desc" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="🌧️ Pioggia debole" android:textSize="10sp" android:textColor="#CBD5E1" android:maxLines="1" android:ellipsize="end" android:paddingEnd="4dp" />
-            <TextView android:id="@+id/tv_d5_rain" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="💧 60%" android:textSize="9.5sp" android:textColor="#38BDF8" android:paddingEnd="8dp" />
-            <TextView android:id="@+id/tv_d5_temp" android:layout_width="46dp" android:layout_height="wrap_content" android:gravity="end" android:text="14° / 6°" android:textSize="10sp" android:textStyle="bold" android:textColor="#F1F5F9" />
+            android:paddingTop="1dp"
+            android:paddingBottom="1dp">
+            <TextView android:id="@+id/tv_d5_day" android:layout_width="56dp" android:layout_height="wrap_content" android:text="Gio 29" android:textSize="9.5sp" android:includeFontPadding="false" android:textStyle="bold" android:textColor="#F1F5F9" android:maxLines="1" />
+            <TextView android:id="@+id/tv_d5_desc" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="🌧️ Pioggia debole" android:textSize="9.5sp" android:includeFontPadding="false" android:textColor="#CBD5E1" android:maxLines="1" android:ellipsize="end" android:paddingEnd="4dp" />
+            <TextView android:id="@+id/tv_d5_rain" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="💧 60%" android:textSize="9sp" android:includeFontPadding="false" android:textColor="#38BDF8" android:paddingEnd="6dp" />
+            <TextView android:id="@+id/tv_d5_temp" android:layout_width="44dp" android:layout_height="wrap_content" android:gravity="end" android:text="14° / 6°" android:textSize="9.5sp" android:includeFontPadding="false" android:textStyle="bold" android:textColor="#F1F5F9" />
         </LinearLayout>
     </LinearLayout>
 

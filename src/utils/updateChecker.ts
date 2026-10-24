@@ -39,12 +39,22 @@ export async function checkForAppUpdates(force = false): Promise<UpdateInfo | nu
       if (cached) {
         try {
           const parsed = JSON.parse(cached);
-          const ttl = parsed.data?.hasUpdate ? CACHE_POSITIVE_TTL_MS : CACHE_NEGATIVE_TTL_MS;
-          if (Date.now() - parsed.timestamp < ttl) {
-            return parsed.data as UpdateInfo;
+          const cachedData = parsed.data as UpdateInfo | undefined;
+          // Invalida subito la cache se la versione dell'app è cambiata (es. appena aggiornata!)
+          if (cachedData && cachedData.currentVersion === CURRENT_APP_VERSION) {
+            const stillNewer = isNewer(cachedData.latestVersion, CURRENT_APP_VERSION);
+            const ttl = stillNewer ? CACHE_POSITIVE_TTL_MS : CACHE_NEGATIVE_TTL_MS;
+            if (Date.now() - parsed.timestamp < ttl) {
+              return {
+                ...cachedData,
+                hasUpdate: stillNewer,
+              };
+            }
+          } else {
+            localStorage.removeItem(CACHE_KEY);
           }
         } catch {
-          // ignora errore cache
+          localStorage.removeItem(CACHE_KEY);
         }
       }
     }

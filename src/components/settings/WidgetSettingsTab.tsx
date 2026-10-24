@@ -5,7 +5,7 @@ import type { WidgetTheme } from '../../types/weather.types';
 
 export const WidgetSettingsTab: React.FC = () => {
   const { preferences, updatePreferences, selectedLocation } = useAppStore();
-  const [previewSize, setPreviewSize] = useState<'4x2' | '4x3' | '4x4'>('4x2');
+  const [previewSize, setPreviewSize] = useState<'4x1' | '4x2'>('4x1');
 
   const widgetConfig = preferences.widgetConfig || {
     theme: 'slate_dark',
@@ -102,7 +102,7 @@ export const WidgetSettingsTab: React.FC = () => {
             Anteprima Widget ({previewSize})
           </span>
           <div className="flex items-center gap-1">
-            {(['4x2', '4x3', '4x4'] as const).map((sz) => (
+            {(['4x1', '4x2'] as const).map((sz) => (
               <button
                 key={sz}
                 type="button"
@@ -113,7 +113,7 @@ export const WidgetSettingsTab: React.FC = () => {
                     : 'text-slate-400 bg-slate-900 border-slate-800 hover:text-slate-300'
                 }`}
               >
-                {sz}
+                {sz === '4x1' ? '4x1 (4 Ore)' : '4x2 (+5 Giorni)'}
               </button>
             ))}
           </div>
@@ -206,19 +206,15 @@ export const WidgetSettingsTab: React.FC = () => {
             </div>
           </div>
 
-          {/* Multi-day forecast preview when resized to 4x3 or 4x4 */}
-          {previewSize !== '4x2' && (
+          {/* Multi-day forecast preview when resized from 4x1 to 4x2 */}
+          {previewSize === '4x2' && (
             <div className="mt-2 pt-2 border-t border-slate-700/40 space-y-1">
               {[
                 { name: 'Domani', icon: '⛅', desc: 'Parz. nuvoloso', temp: '17° / 8°' },
                 { name: 'Lun', icon: '🌧️', desc: 'Pioggia • 65%', temp: '14° / 7°' },
                 { name: 'Mar', icon: '☀️', desc: 'Cielo sereno', temp: '18° / 6°' },
-                ...(previewSize === '4x4'
-                  ? [
-                      { name: 'Mer', icon: '🌤️', desc: 'Poco nuvoloso', temp: '19° / 8°' },
-                      { name: 'Gio', icon: '☀️', desc: 'Cielo sereno', temp: '20° / 9°' },
-                    ]
-                  : []),
+                { name: 'Mer', icon: '🌤️', desc: 'Poco nuvoloso', temp: '19° / 8°' },
+                { name: 'Gio', icon: '☀️', desc: 'Cielo sereno', temp: '20° / 9°' },
               ].map((d) => (
                 <div key={d.name} className="flex items-center justify-between text-[10px]">
                   <span className={`w-12 font-bold ${currentThemeStyle.temp}`}>{d.name}</span>
@@ -232,7 +228,7 @@ export const WidgetSettingsTab: React.FC = () => {
         </div>
         <p className="text-[10px] text-slate-400 mt-1.5 flex items-center gap-1">
           <Maximize2 className="w-3 h-3 text-sky-400 shrink-0" />
-          Di base il widget è <strong>4x2</strong> con le prossime 4 ore sempre visibili. Allungandolo sulla Home a <strong>4x3</strong> o <strong>4x4</strong> compaiono in automatico i prossimi giorni!
+          Di base il widget è <strong>4x1</strong> con le prossime 4 ore sempre visibili. Allungandolo sulla Home a <strong>4x2</strong> compaiono subito tutti i prossimi 5 giorni!
         </p>
       </div>
 

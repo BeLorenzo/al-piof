@@ -134,7 +134,7 @@ public class WeatherWidgetProvider extends AppWidgetProvider {
 
         views.setViewVisibility(R.id.ll_widget_chips, anyChip ? View.VISIBLE : View.GONE);
 
-        // 3. Default 4-Hour Strip (Always visible in 4x2 base widget)
+        // 3. Default 4-Hour Strip (Always visible in 4x1 base widget)
         views.setViewVisibility(R.id.layout_hourly_strip, View.VISIBLE);
         views.setTextViewText(R.id.tv_h1_time, prefs.getString("h1_time", "13:00"));
         views.setTextViewText(R.id.tv_h1_icon, prefs.getString("h1_icon", "☀️"));
@@ -152,12 +152,17 @@ public class WeatherWidgetProvider extends AppWidgetProvider {
         views.setTextViewText(R.id.tv_h4_icon, prefs.getString("h4_icon", "☀️"));
         views.setTextViewText(R.id.tv_h4_temp, prefs.getString("h4_temp", "--°"));
 
-        // 4. Dynamic Multi-Day Forecast Section when widget is resized to 4x3 or 4x4
+        // 4. Dynamic Multi-Day Forecast Section when widget is resized from 4x1 to 4x2 (all 5 upcoming days)
         Bundle options = appWidgetManager.getAppWidgetOptions(appWidgetId);
         int minHeight = options != null ? options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 0) : 0;
 
-        if (minHeight >= 165) {
+        if (minHeight >= 115) {
             views.setViewVisibility(R.id.layout_daily_section, View.VISIBLE);
+            views.setViewVisibility(R.id.row_day_1, View.VISIBLE);
+            views.setViewVisibility(R.id.row_day_2, View.VISIBLE);
+            views.setViewVisibility(R.id.row_day_3, View.VISIBLE);
+            views.setViewVisibility(R.id.row_day_4, View.VISIBLE);
+            views.setViewVisibility(R.id.row_day_5, View.VISIBLE);
 
             views.setTextViewText(R.id.tv_d1_day, prefs.getString("d1_day", "Dom"));
             views.setTextViewText(R.id.tv_d1_desc, prefs.getString("d1_desc", "☀️ Sereno"));
@@ -174,23 +179,15 @@ public class WeatherWidgetProvider extends AppWidgetProvider {
             views.setTextViewText(R.id.tv_d3_rain, prefs.getString("d3_rain", ""));
             views.setTextViewText(R.id.tv_d3_temp, prefs.getString("d3_temp", "--° / --°"));
 
-            if (minHeight >= 240) {
-                views.setViewVisibility(R.id.row_day_4, View.VISIBLE);
-                views.setViewVisibility(R.id.row_day_5, View.VISIBLE);
+            views.setTextViewText(R.id.tv_d4_day, prefs.getString("d4_day", "Mer"));
+            views.setTextViewText(R.id.tv_d4_desc, prefs.getString("d4_desc", "☀️ Sereno"));
+            views.setTextViewText(R.id.tv_d4_rain, prefs.getString("d4_rain", ""));
+            views.setTextViewText(R.id.tv_d4_temp, prefs.getString("d4_temp", "--° / --°"));
 
-                views.setTextViewText(R.id.tv_d4_day, prefs.getString("d4_day", "Mer"));
-                views.setTextViewText(R.id.tv_d4_desc, prefs.getString("d4_desc", "☀️ Sereno"));
-                views.setTextViewText(R.id.tv_d4_rain, prefs.getString("d4_rain", ""));
-                views.setTextViewText(R.id.tv_d4_temp, prefs.getString("d4_temp", "--° / --°"));
-
-                views.setTextViewText(R.id.tv_d5_day, prefs.getString("d5_day", "Gio"));
-                views.setTextViewText(R.id.tv_d5_desc, prefs.getString("d5_desc", "☀️ Sereno"));
-                views.setTextViewText(R.id.tv_d5_rain, prefs.getString("d5_rain", ""));
-                views.setTextViewText(R.id.tv_d5_temp, prefs.getString("d5_temp", "--° / --°"));
-            } else {
-                views.setViewVisibility(R.id.row_day_4, View.GONE);
-                views.setViewVisibility(R.id.row_day_5, View.GONE);
-            }
+            views.setTextViewText(R.id.tv_d5_day, prefs.getString("d5_day", "Gio"));
+            views.setTextViewText(R.id.tv_d5_desc, prefs.getString("d5_desc", "☀️ Sereno"));
+            views.setTextViewText(R.id.tv_d5_rain, prefs.getString("d5_rain", ""));
+            views.setTextViewText(R.id.tv_d5_temp, prefs.getString("d5_temp", "--° / --°"));
         } else {
             views.setViewVisibility(R.id.layout_daily_section, View.GONE);
         }
