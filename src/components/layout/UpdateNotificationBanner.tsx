@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { ArrowDownToLine, X, Sparkles } from 'lucide-react';
+import { Capacitor } from '@capacitor/core';
 import { checkForAppUpdates, UpdateInfo } from '../../utils/updateChecker';
 
 export const UpdateNotificationBanner: React.FC = () => {
@@ -7,6 +8,11 @@ export const UpdateNotificationBanner: React.FC = () => {
   const [isDismissed, setIsDismissed] = useState(false);
 
   useEffect(() => {
+    // Esegui il check degli aggiornamenti APK solo su app nativa Android
+    if (!Capacitor.isNativePlatform()) {
+      return;
+    }
+
     let mounted = true;
     checkForAppUpdates().then((res) => {
       if (mounted && res && res.hasUpdate) {
@@ -18,7 +24,7 @@ export const UpdateNotificationBanner: React.FC = () => {
     };
   }, []);
 
-  if (!update || !update.hasUpdate || isDismissed) {
+  if (!Capacitor.isNativePlatform() || !update || !update.hasUpdate || isDismissed) {
     return null;
   }
 
