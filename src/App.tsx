@@ -3,6 +3,7 @@ import { useAppStore } from './store/useAppStore';
 import { useWeatherData } from './hooks/useWeatherData';
 import { TopBar } from './components/layout/TopBar';
 import { RefreshStatusBar } from './components/layout/RefreshStatusBar';
+import { UpdateNotificationBanner } from './components/layout/UpdateNotificationBanner';
 import { SearchModal } from './components/search/SearchModal';
 import { DaySelector } from './components/forecast/DaySelector';
 import { HeroSummary } from './components/hero/HeroSummary';
@@ -68,6 +69,9 @@ export default function App() {
           isFetching={isFetching}
           onRefresh={() => refetch()}
         />
+
+        {/* In-App Update Notification Banner */}
+        <UpdateNotificationBanner />
 
         {/* Modals & Settings Drawer */}
         <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
