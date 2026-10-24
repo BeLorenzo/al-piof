@@ -18,14 +18,6 @@
 
 ---
 
-<p align="center">
-  <img src="docs/screenshots/app_hero.png" width="45%" alt="Schermata Principale Al piöf" />
-  &nbsp;&nbsp;&nbsp;&nbsp;
-  <img src="docs/screenshots/widget_home.png" width="45%" alt="Widget Android sulla Home" />
-</p>
-
----
-
 ## 💡 La Genesi: Esperimento di "Pure Vibe Coding"
 
 Tutto nasce da uno **sbatti quotidiano**: aprire le consuete app meteo commerciali (3B Meteo, IlMeteo, ecc.) e dover aspettare 30 secondi di pubblicità video non skippabili, schivare banner invasivi a tutto schermo e leggere previsioni spesso basate su modelli globali generici a bassa risoluzione che sulle Prealpi e in Pianura Padana faticano a cogliere microclimi e temporali improvvisi.
@@ -66,9 +58,8 @@ Dati in tempo reale dal programma europeo Copernicus:
 - Indice Europeo Qualità dell'Aria (**EAQI**), $\text{PM}_{10}$, $\text{PM}_{2.5}$, Ozono ($O_3$) e Biossido di Azoto ($NO_2$).
 - **Monitoraggio 6 specie di pollini:** Betulla, Ontano, Graminacee, Artemisia, Olivo e Ambrosia, con valori decimali e **calendario fenologico stagionale** (evita il panico da "zero pollini" spiegando quando la pianta è in riposo vegetativo).
 
-### 5. 📡 Doppio Radar Meteorologico
-- **Windy Embed Radar:** animazione dinamica dei nuclei di precipitazione con nowcast predittivo $+1\text{h}$.
-- **Mappa Nativa DPC Protezione Civile (MapLibre GL):** visualizzazione dei dati radar WMS VMI (*Vertical Maximum Intensity*) a riflettività continua, gestita direttamente senza passare da servizi terzi.
+### 5. 📡 Mappa Radar e Precipitazioni Interattiva
+- **Radar & Precipitazioni ECMWF:** animazione dinamica dei nuclei di pioggia con timeline oraria interattiva e nowcast predittivo per monitorare temporali e rovesci in tempo reale.
 
 ### 6. 🔄 Aggiornamenti In-App Automatici
 Nessun bisogno di controllare manualmente GitHub: l'app include un leggero checker all'avvio che rileva se è disponibile una nuova release e mostra un banner per scaricare direttamente l'ultimo file `.apk`.
@@ -96,7 +87,7 @@ Nessun bisogno di controllare manualmente GitHub: l'app include un leggero check
 │   │   ├── forecast/               # Scrubber orario, lista verticale 24h, grafici SVG
 │   │   ├── hero/                   # Hero in tempo reale, Bento Grid, modale qualità aria
 │   │   ├── layout/                 # TopBar, status bar, banner aggiornamenti GitHub
-│   │   ├── radar/                  # Radar Windy + MapLibre Protezione Civile
+│   │   ├── radar/                  # Mappa radar interattiva Windy
 │   │   └── settings/               # Selettore temi, anteprima widget, opzioni calcoli
 │   ├── hooks/
 │   │   └── useWeatherData.ts       # Hook unificato con cache TanStack & interpolazione
@@ -173,4 +164,4 @@ Il progetto è già configurato per Vercel:
 
 Distribuito sotto licenza **MIT**. Libero per uso personale, modifica e studio.
 Dati meteorologici forniti gratuitamente da [Open-Meteo.com](https://open-meteo.com) sotto licenza Attribution 4.0 International (CC BY 4.0).
-Mappe radar fornite da [Dipartimento della Protezione Civile](https://dpc.regione.lombardia.it) e [Windy.com](https://www.windy.com).
+Mappe radar fornite da [Windy.com](https://www.windy.com).
