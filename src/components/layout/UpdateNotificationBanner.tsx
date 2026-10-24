@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ArrowDownToLine, X, Sparkles } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
 import { checkForAppUpdates, UpdateInfo } from '../../utils/updateChecker';
+import { openExternalUrl } from '../../utils/widgetBridge';
 
 export const UpdateNotificationBanner: React.FC = () => {
   const [update, setUpdate] = useState<UpdateInfo | null>(null);
@@ -40,8 +41,16 @@ export const UpdateNotificationBanner: React.FC = () => {
 
   const handleDownload = () => {
     const targetUrl = update.apkDownloadUrl || update.releaseUrl;
-    window.open(targetUrl, '_system');
+    openExternalUrl(targetUrl);
   };
+
+  // Parsing delle note di rilascio in un elenco puntato
+  const notesList = update.releaseNotes
+    ? update.releaseNotes
+        .split('\n')
+        .map((l) => l.replace(/^[-*•#\d.]\s*/, '').trim())
+        .filter((l) => l.length > 3)
+    : [];
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
@@ -70,22 +79,38 @@ export const UpdateNotificationBanner: React.FC = () => {
           Nuova Versione Disponibile
         </div>
 
-        <h3 className="text-xl font-bold text-slate-50 mb-1">
+        <h3 className="text-xl font-bold text-slate-50 mb-3">
           Al piöf v{update.latestVersion}
         </h3>
 
-        <p className="text-xs text-slate-300 leading-relaxed mb-6 px-2">
-          {update.releaseNotes
-            ? update.releaseNotes.slice(0, 140) + (update.releaseNotes.length > 140 ? '...' : '')
-            : "È pronto un nuovo aggiornamento con correzioni e miglioramenti per la tua app meteorologica."}
-        </p>
+        {/* Box Elenco Novità */}
+        <div className="bg-slate-950/70 border border-slate-800/80 rounded-2xl p-3.5 mb-5 text-left max-h-40 overflow-y-auto">
+          <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">
+            Novità dell&apos;aggiornamento:
+          </div>
+          <ul className="space-y-1.5 text-xs text-slate-200">
+            {(notesList.length > 0
+              ? notesList
+              : [
+                  'Modale in sovraimpressione per il download rapido degli aggiornamenti',
+                  'Cache intelligente a 1 minuto con fallback ad alta disponibilità',
+                  'Ottimizzazioni per il widget della schermata Home',
+                ]
+            ).map((item, idx) => (
+              <li key={idx} className="flex items-start gap-2 leading-snug">
+                <span className="text-sky-400 font-bold shrink-0 mt-0.5">•</span>
+                <span className="text-slate-200">{item}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
 
         {/* Pulsanti Azione */}
         <div className="space-y-2.5">
           <button
             onClick={handleDownload}
             type="button"
-            className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-slate-950 font-bold text-sm shadow-lg shadow-sky-500/25 active:scale-95 transition-all flex items-center justify-center gap-2"
+            className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-slate-950 font-bold text-sm shadow-lg shadow-sky-500/25 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
           >
             <ArrowDownToLine className="w-4 h-4 stroke-[2.5]" />
             <span>Scarica Aggiornamento (.apk)</span>
@@ -94,7 +119,7 @@ export const UpdateNotificationBanner: React.FC = () => {
           <button
             onClick={() => setIsDismissed(true)}
             type="button"
-            className="w-full py-2.5 text-xs font-medium text-slate-400 hover:text-slate-200 transition-colors"
+            className="w-full py-2.5 text-xs font-medium text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
           >
             Continua senza aggiornare
           </button>

@@ -3,6 +3,7 @@ import { format } from 'date-fns';
 import type { NormalizedWeatherData, WidgetConfig } from '../types/weather.types';
 
 interface WidgetBridgePlugin {
+  openUrl?(options: { url: string }): Promise<{ success: boolean }>;
   updateWidgetData(data: {
     city?: string;
     temp?: string;
@@ -137,4 +138,18 @@ export async function syncWidgetWithData(
   } catch (err) {
     console.warn('[WidgetBridge] Failed to update widget:', err);
   }
+}
+
+export async function openExternalUrl(url: string): Promise<void> {
+  if (Capacitor.isNativePlatform()) {
+    try {
+      if (NativeWidgetBridge.openUrl) {
+        await NativeWidgetBridge.openUrl({ url });
+        return;
+      }
+    } catch (e) {
+      console.warn('[WidgetBridge] openUrl failed, fallback to window.open:', e);
+    }
+  }
+  window.open(url, '_blank');
 }

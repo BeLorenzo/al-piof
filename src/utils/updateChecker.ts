@@ -1,4 +1,6 @@
-export const CURRENT_APP_VERSION = '1.0.1';
+import pkg from '../../package.json';
+
+export const CURRENT_APP_VERSION: string = pkg.version;
 const GITHUB_REPO = 'BeLorenzo/al-piof';
 const CACHE_KEY = 'alpiof_update_check';
 const CACHE_NEGATIVE_TTL_MS = 60 * 1000; // Solo 1 minuto se non ci sono aggiornamenti
