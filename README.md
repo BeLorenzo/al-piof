@@ -12,6 +12,13 @@
 
 **Un'applicazione meteo mobile-first e Android nativa ad alta precisione, priva di pubblicità, basata sul consenso tra i modelli MeteoSwiss (ICON-CH2) ed ECMWF, con Widget personalizzabile per la Home Screen.**
 
+<p align="center">
+  <img src="docs/images/preview_main.png" width="23%" alt="Dashboard Principale" />
+  <img src="docs/images/preview_hourly.png" width="23%" alt="Previsioni Orarie & 7 Giorni" />
+  <img src="docs/images/preview_style.png" width="23%" alt="Personalizzazione Aspetto & Temi" />
+  <img src="docs/images/preview_widget.png" width="23%" alt="Configuratore Widget Android" />
+</p>
+
 [Caratteristiche](#-caratteristiche-principali) • [La Genesi: Vibe Coding](#-la-genesi-esperimento-di-pure-vibe-coding) • [Widget Android](#-widget-android-nativo) • [Architettura](#-architettura-tecnica) • [Installazione](#-installazione--download-apk)
 
 </div>
@@ -109,8 +116,8 @@ Nessun bisogno di controllare manualmente GitHub: l'app include un leggero check
 
 ### Scaricare l'APK pre-compilato
 1. Vai nella sezione [**Releases**](https://github.com/BeLorenzo/al-piof/releases) di questo repository.
-2. Scarica il file `app-debug.apk` (o la versione più recente).
-3. Aprilo sul tuo telefono Android e conferma l'installazione (autorizzando l'installazione da fonti sconosciute).
+2. Scarica il file `al-piof-v1.0.0.apk` (o la versione più recente disponibile).
+3. Aprilo sul tuo smartphone Android e conferma l'installazione (autorizzando l'installazione da browser/fonti sconosciute se richiesto).
 4. Vai sulla Home, tieni premuto su uno spazio vuoto $\rightarrow$ **Widget** $\rightarrow$ cerca **Al piöf** e trascinalo sullo schermo!
 
 ---
