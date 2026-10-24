@@ -47,6 +47,13 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
     'sunMoon',
     'cloudSun',
   ],
+  widgetConfig: {
+    theme: 'slate_dark',
+    showRain: true,
+    showWind: true,
+    showAqi: true,
+    showUv: true,
+  },
 };
 
 const VALID_MODELS: WeatherModel[] = [

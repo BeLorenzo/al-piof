@@ -35,8 +35,8 @@ export const DaySelector: React.FC<DaySelectorProps> = ({ days }) => {
               onClick={() => setSelectedDayIndex(idx)}
               className={`shrink-0 flex flex-col items-center justify-between p-2 rounded-2xl border transition-all w-[72px] h-[108px] relative select-none ${
                 isSelected
-                  ? 'bg-slate-800/95 border-sky-400 shadow-md shadow-sky-950/50 text-white ring-1 ring-sky-400/40'
-                  : 'bg-slate-900/60 border-slate-800/80 text-slate-300 hover:border-slate-700 hover:bg-slate-800/40'
+                  ? 'bg-sky-500/15 border-sky-400 shadow-md text-slate-100 ring-1 ring-sky-400/50 font-bold'
+                  : 'bg-slate-900/70 border-slate-800/80 text-slate-300 hover:border-slate-700 hover:bg-slate-800/50'
               }`}
               type="button"
             >
@@ -51,7 +51,7 @@ export const DaySelector: React.FC<DaySelectorProps> = ({ days }) => {
                   }
                 />
                 {hasRain && (
-                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 ring-2 ring-slate-950" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 ring-1 ring-slate-800" />
                 )}
               </div>
 
@@ -59,7 +59,7 @@ export const DaySelector: React.FC<DaySelectorProps> = ({ days }) => {
               <div className="text-center mt-0.5">
                 <div
                   className={`text-xs font-bold ${
-                    isSelected ? 'text-sky-300' : 'text-slate-200'
+                    isSelected ? 'text-sky-400' : 'text-slate-200'
                   }`}
                 >
                   {day.isToday ? 'Oggi' : day.dayName.slice(0, 3)}
@@ -76,7 +76,7 @@ export const DaySelector: React.FC<DaySelectorProps> = ({ days }) => {
 
               {/* Min / Max & Rain mm */}
               <div className="text-center w-full num-tabular">
-                <div className="text-xs font-bold text-white tracking-tight leading-none">
+                <div className="text-xs font-bold text-slate-100 tracking-tight leading-none">
                   {formatTemperature(day.tempMax, preferences.roundTemperatures)}
                   <span className="text-[10px] font-normal text-slate-400 ml-1">
                     {formatTemperature(day.tempMin, preferences.roundTemperatures)}

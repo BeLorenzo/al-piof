@@ -51,7 +51,7 @@ export const HeroSummary: React.FC<HeroSummaryProps> = ({
               <span>{isToday ? 'Adesso • In tempo reale' : currentDay.dayName}</span>
             </div>
             <div className="flex items-baseline gap-2">
-              <span className="text-5xl font-black text-white tracking-tighter num-tabular">
+              <span className="text-5xl font-black text-slate-100 tracking-tighter num-tabular">
                 {isToday
                   ? formatTemperature(data.current.temperature, preferences.roundTemperatures)
                   : formatTemperature(currentDay.tempMax, preferences.roundTemperatures)}

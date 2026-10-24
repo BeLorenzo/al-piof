@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useLayoutEffect, useState, useEffect } from 'react';
 import { useAppStore } from './store/useAppStore';
 import { useWeatherData } from './hooks/useWeatherData';
 import { TopBar } from './components/layout/TopBar';
@@ -15,7 +15,8 @@ import { RadarSection } from './components/radar/RadarSection';
 import { HistoricalComparisonCard } from './components/forecast/HistoricalComparisonCard';
 import { SettingsDrawer } from './components/settings/SettingsDrawer';
 import { BottomNavDock } from './components/layout/BottomNavDock';
-import { getThemeCssVars } from './utils/themeUtils';
+import { applyThemeToDocument } from './utils/themeUtils';
+import { syncWidgetWithData } from './utils/widgetBridge';
 import { Loader2, AlertTriangle } from 'lucide-react';
 
 export default function App() {
@@ -38,9 +39,23 @@ export default function App() {
 
   const currentDay = data?.daily[selectedDayIndex] || data?.daily[0];
 
+  // Il tema vive su <html>: cosi' body, overscroll e modali ereditano la stessa palette
+  const dynamicCode = data?.current.weatherCode;
+  const dynamicIsDay = data?.current.isDay;
+  useLayoutEffect(() => {
+    applyThemeToDocument(preferences, data);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [preferences, dynamicCode, dynamicIsDay]);
+
+  // Sincronizza il widget Android della schermata Home in tempo reale
+  useEffect(() => {
+    if (data) {
+      syncWidgetWithData(data, preferences.widgetConfig);
+    }
+  }, [data, preferences.widgetConfig]);
+
   return (
     <div
-      style={getThemeCssVars(preferences, data)}
       className={`min-h-screen app-theme-root font-${preferences.font} surface-${preferences.surfaceStyle} flex justify-center transition-colors duration-300`}
     >
       <div className="w-full max-w-lg bg-transparent flex flex-col min-h-screen relative">

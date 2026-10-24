@@ -89,10 +89,10 @@ export const HourlyRow: React.FC<HourlyRowProps> = ({
 
         {/* Col 3: Temp (Percepita) */}
         <div className="text-right flex flex-col items-end num-tabular">
-          <span className="font-bold text-white text-[14px] leading-tight">
+          <span className="font-bold text-slate-100 text-[14px] leading-tight">
             {formatTemperature(row.temperature, preferences.roundTemperatures)}
           </span>
-          <span className="text-[10px] text-slate-500 leading-none">
+          <span className="text-[10px] text-slate-400 leading-none">
             {formatTemperature(row.apparentTemperature, preferences.roundTemperatures)}
           </span>
         </div>

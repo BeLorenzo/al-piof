@@ -69,7 +69,7 @@ export const HourlyChartSvg: React.FC<HourlyChartSvgProps> = ({
           y1={tempBottom + 12}
           x2={svgWidth - paddingX}
           y2={tempBottom + 12}
-          stroke="#1e293b"
+          className="stroke-slate-800"
           strokeDasharray="4 4"
           strokeWidth="1"
         />
@@ -85,13 +85,13 @@ export const HourlyChartSvg: React.FC<HourlyChartSvgProps> = ({
               y1={tempTop - 10}
               x2={currentHourPoint.x}
               y2={svgHeight - 22}
-              stroke="#38bdf8"
+              className="stroke-sky-400"
               strokeDasharray="3 3"
               strokeWidth="1.5"
               opacity="0.8"
             />
             <rect x={currentHourPoint.x - 14} y={tempTop - 22} width={28} height={14} rx={4} className="fill-sky-500" />
-            <text x={currentHourPoint.x} y={tempTop - 12} textAnchor="middle" className="fill-slate-950 text-[9px] font-black">
+            <text x={currentHourPoint.x} y={tempTop - 12} textAnchor="middle" className="fill-accent-contrast text-[9px] font-black">
               ORA
             </text>
           </g>

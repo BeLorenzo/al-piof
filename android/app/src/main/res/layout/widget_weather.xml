@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/widget_bg_dark"
+    android:paddingStart="12dp"
+    android:paddingEnd="12dp"
+    android:paddingTop="9dp"
+    android:paddingBottom="9dp">
+
+    <!-- Top Section: City & Condition on Left, Icon & Temperature on Right -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <!-- Left info -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:paddingEnd="6dp">
+
+            <TextView
+                android:id="@+id/tv_widget_city"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Sotto il Monte"
+                android:textColor="#38BDF8"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:maxLines="1"
+                android:ellipsize="end" />
+
+            <TextView
+                android:id="@+id/tv_widget_desc"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Cielo sereno • Max 16° Min 6°"
+                android:textColor="#CBD5E1"
+                android:textSize="10.5sp"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:layout_marginTop="1dp" />
+        </LinearLayout>
+
+        <!-- Right: Icon + Big Temp -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/tv_widget_icon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="☀️"
+                android:textSize="26sp"
+                android:includeFontPadding="false"
+                android:paddingEnd="4dp" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="end">
+
+                <TextView
+                    android:id="@+id/tv_widget_temp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="15.5°"
+                    android:textColor="#F1F5F9"
+                    android:textSize="24sp"
+                    android:textStyle="bold"
+                    android:includeFontPadding="false" />
+
+                <TextView
+                    android:id="@+id/tv_widget_time"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="12:50"
+                    android:textColor="#94A3B8"
+                    android:textSize="9.5sp" />
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Center Section: Extra Metric Chips (Single Clean Row) -->
+    <LinearLayout
+        android:id="@+id/ll_widget_chips"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginTop="6dp">
+
+        <!-- Rain Chip -->
+        <LinearLayout
+            android:id="@+id/chip_rain"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:background="@drawable/widget_chip_bg"
+            android:paddingStart="5dp"
+            android:paddingEnd="5dp"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp"
+            android:layout_marginEnd="4dp">
+
+            <TextView
+                android:id="@+id/tv_widget_rain"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="💧 0% • 0mm"
+                android:textColor="#38BDF8"
+                android:textSize="9.5sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- Wind Chip -->
+        <LinearLayout
+            android:id="@+id/chip_wind"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:background="@drawable/widget_chip_bg"
+            android:paddingStart="5dp"
+            android:paddingEnd="5dp"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp"
+            android:layout_marginEnd="4dp">
+
+            <TextView
+                android:id="@+id/tv_widget_wind"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="💨 17 km/h"
+                android:textColor="#94A3B8"
+                android:textSize="9.5sp" />
+        </LinearLayout>
+
+        <!-- AQI Chip -->
+        <LinearLayout
+            android:id="@+id/chip_aqi"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:background="@drawable/widget_chip_bg"
+            android:paddingStart="5dp"
+            android:paddingEnd="5dp"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp"
+            android:layout_marginEnd="4dp">
+
+            <TextView
+                android:id="@+id/tv_widget_aqi"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🌱 AQI 26"
+                android:textColor="#34D399"
+                android:textSize="9.5sp" />
+        </LinearLayout>
+
+        <!-- UV Chip -->
+        <LinearLayout
+            android:id="@+id/chip_uv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:background="@drawable/widget_chip_bg"
+            android:paddingStart="5dp"
+            android:paddingEnd="5dp"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp">
+
+            <TextView
+                android:id="@+id/tv_widget_uv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="☀️ UV 3"
+                android:textColor="#FBBF24"
+                android:textSize="9.5sp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Optional Bottom Hourly Forecast Strip (Visible if toggled on or if widget is resized taller) -->
+    <LinearLayout
+        android:id="@+id/layout_hourly_strip"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginTop="8dp"
+        android:visibility="gone">
+
+        <!-- Hour 1 -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+            <TextView android:id="@+id/tv_h1_time" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="13:00" android:textSize="9.5sp" android:textColor="#94A3B8" />
+            <TextView android:id="@+id/tv_h1_icon" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="☀️" android:textSize="13sp" android:layout_marginTop="1dp" />
+            <TextView android:id="@+id/tv_h1_temp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="16°" android:textSize="10.5sp" android:textStyle="bold" android:textColor="#F1F5F9" android:layout_marginTop="1dp" />
+        </LinearLayout>
+
+        <!-- Hour 2 -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+            <TextView android:id="@+id/tv_h2_time" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="14:00" android:textSize="9.5sp" android:textColor="#94A3B8" />
+            <TextView android:id="@+id/tv_h2_icon" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="☀️" android:textSize="13sp" android:layout_marginTop="1dp" />
+            <TextView android:id="@+id/tv_h2_temp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="16°" android:textSize="10.5sp" android:textStyle="bold" android:textColor="#F1F5F9" android:layout_marginTop="1dp" />
+        </LinearLayout>
+
+        <!-- Hour 3 -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+            <TextView android:id="@+id/tv_h3_time" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="15:00" android:textSize="9.5sp" android:textColor="#94A3B8" />
+            <TextView android:id="@+id/tv_h3_icon" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="☀️" android:textSize="13sp" android:layout_marginTop="1dp" />
+            <TextView android:id="@+id/tv_h3_temp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="16°" android:textSize="10.5sp" android:textStyle="bold" android:textColor="#F1F5F9" android:layout_marginTop="1dp" />
+        </LinearLayout>
+
+        <!-- Hour 4 -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+            <TextView android:id="@+id/tv_h4_time" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="16:00" android:textSize="9.5sp" android:textColor="#94A3B8" />
+            <TextView android:id="@+id/tv_h4_icon" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="☀️" android:textSize="13sp" android:layout_marginTop="1dp" />
+            <TextView android:id="@+id/tv_h4_temp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="15°" android:textSize="10.5sp" android:textStyle="bold" android:textColor="#F1F5F9" android:layout_marginTop="1dp" />
+        </LinearLayout>
+    </LinearLayout>
+
+</LinearLayout>

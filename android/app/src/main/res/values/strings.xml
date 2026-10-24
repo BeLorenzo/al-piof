@@ -4,4 +4,5 @@
     <string name="title_activity_main">Al piöf</string>
     <string name="package_name">it.alpiof.app</string>
     <string name="custom_url_scheme">it.alpiof.app</string>
+    <string name="widget_description">Widget meteo con temperatura in tempo reale e opzioni personalizzabili</string>
 </resources>

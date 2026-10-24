@@ -1,17 +1,18 @@
 import React, { useState } from 'react';
-import { X, Palette, Sliders, LayoutGrid, RotateCcw, Scale } from 'lucide-react';
+import { X, Palette, Sliders, LayoutGrid, RotateCcw, Scale, Smartphone } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import { AppearanceSettingsTab } from './AppearanceSettingsTab';
 import { DataSettingsTab } from './DataSettingsTab';
 import { LayoutSettingsTab } from './LayoutSettingsTab';
+import { WidgetSettingsTab } from './WidgetSettingsTab';
 
 export const SettingsDrawer: React.FC = () => {
   const { isSettingsOpen, setIsSettingsOpen, resetPreferences } = useAppStore();
-  const [activeTab, setActiveTab] = useState<'appearance' | 'data' | 'layout'>('appearance');
+  const [activeTab, setActiveTab] = useState<'appearance' | 'data' | 'layout' | 'widget'>('appearance');
 
   if (!isSettingsOpen) return null;
 
-  const isLivePreview = activeTab === 'appearance';
+  const isLivePreview = activeTab === 'appearance' || activeTab === 'widget';
 
   return (
     <div
@@ -51,43 +52,55 @@ export const SettingsDrawer: React.FC = () => {
         {/* Tab Navigation */}
         <div
           style={{ backgroundColor: 'var(--bg-sub)' }}
-          className="grid grid-cols-3 gap-1 p-2 border-b border-slate-800/80 text-xs"
+          className="grid grid-cols-4 gap-1 p-2 border-b border-slate-800/80 text-[11px]"
         >
           <button
             onClick={() => setActiveTab('appearance')}
-            className={`flex items-center justify-center gap-1.5 py-1.5 rounded-xl font-medium transition-all ${
+            className={`flex items-center justify-center gap-1 py-1.5 rounded-xl font-medium transition-all ${
               activeTab === 'appearance'
                 ? 'bg-sky-500 text-slate-950 font-bold shadow-sm'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
             type="button"
           >
-            <Palette className="w-3.5 h-3.5" />
-            <span>Aspetto</span>
+            <Palette className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">Aspetto</span>
           </button>
           <button
             onClick={() => setActiveTab('data')}
-            className={`flex items-center justify-center gap-1.5 py-1.5 rounded-xl font-medium transition-all ${
+            className={`flex items-center justify-center gap-1 py-1.5 rounded-xl font-medium transition-all ${
               activeTab === 'data'
                 ? 'bg-sky-500 text-slate-950 font-bold shadow-sm'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
             type="button"
           >
-            <Scale className="w-3.5 h-3.5" />
-            <span>Dati &amp; Calcoli</span>
+            <Scale className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">Dati</span>
           </button>
           <button
             onClick={() => setActiveTab('layout')}
-            className={`flex items-center justify-center gap-1.5 py-1.5 rounded-xl font-medium transition-all ${
+            className={`flex items-center justify-center gap-1 py-1.5 rounded-xl font-medium transition-all ${
               activeTab === 'layout'
                 ? 'bg-sky-500 text-slate-950 font-bold shadow-sm'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
             type="button"
           >
-            <LayoutGrid className="w-3.5 h-3.5" />
-            <span>Card Visibili</span>
+            <LayoutGrid className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">Card</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('widget')}
+            className={`flex items-center justify-center gap-1 py-1.5 rounded-xl font-medium transition-all ${
+              activeTab === 'widget'
+                ? 'bg-sky-500 text-slate-950 font-bold shadow-sm'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+            type="button"
+          >
+            <Smartphone className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">Widget</span>
           </button>
         </div>
 
@@ -99,6 +112,7 @@ export const SettingsDrawer: React.FC = () => {
           {activeTab === 'appearance' && <AppearanceSettingsTab />}
           {activeTab === 'data' && <DataSettingsTab />}
           {activeTab === 'layout' && <LayoutSettingsTab />}
+          {activeTab === 'widget' && <WidgetSettingsTab />}
         </div>
 
         {/* Footer Actions */}

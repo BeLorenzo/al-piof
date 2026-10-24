@@ -88,6 +88,11 @@ export interface RawModelComparisonsResponse {
     precipitation_icon_seamless?: number[];
     precipitation_icon_d2?: number[];
     precipitation?: number[];
+    weather_code_meteoswiss_icon_ch2?: number[];
+    weather_code_ecmwf_ifs025?: number[];
+    weather_code_icon_seamless?: number[];
+    weather_code_icon_d2?: number[];
+    weather_code?: number[];
     [key: string]: unknown;
   };
   daily?: {
@@ -107,6 +112,11 @@ export interface RawModelComparisonsResponse {
     precipitation_sum_icon_seamless?: number[];
     precipitation_sum_icon_d2?: number[];
     precipitation_sum?: number[];
+    weather_code_meteoswiss_icon_ch2?: number[];
+    weather_code_ecmwf_ifs025?: number[];
+    weather_code_icon_seamless?: number[];
+    weather_code_icon_d2?: number[];
+    weather_code?: number[];
     [key: string]: unknown;
   };
 }
@@ -121,8 +131,8 @@ export async function fetchModelComparisons(
     models: 'meteoswiss_icon_ch2,ecmwf_ifs025,icon_seamless',
     timezone: 'auto',
     forecast_days: '7',
-    hourly: 'temperature_2m,precipitation',
-    daily: 'temperature_2m_max,temperature_2m_min,precipitation_sum',
+    hourly: 'temperature_2m,precipitation,weather_code',
+    daily: 'temperature_2m_max,temperature_2m_min,precipitation_sum,weather_code',
   });
 
   const url = `${OPEN_METEO_FORECAST_URL}?${params.toString()}`;

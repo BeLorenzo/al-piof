@@ -1,3 +1,4 @@
+import { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { format, parseISO, isToday } from 'date-fns';
 import { it } from 'date-fns/locale';
@@ -8,9 +9,14 @@ import {
 } from '../api/weatherApi';
 import { fetchAirQuality } from '../api/airQualityApi';
 import { getEaqiInfo } from '../utils/aqiScale';
-import { reconcileWeatherCode } from '../utils/wmoCodes';
+import {
+  resolveHourlyCode,
+  resolveDailyCode,
+  resolveCurrentCode,
+} from '../utils/weatherConsensus';
 import {
   calculateDewPoint,
+  calculatePhysiologicalApparentTemp,
   getDewPointComfort,
   getUvInfo,
   getMoonDetails,
@@ -67,8 +73,6 @@ function normalizeWeatherData(
 
     const temperature =
       Math.round(forecast.hourly.temperature_2m[i] * 10) / 10;
-    const apparentTemperature =
-      Math.round(forecast.hourly.apparent_temperature[i] * 10) / 10;
     const precipitation =
       Math.round((forecast.hourly.precipitation[i] ?? 0) * 10) / 10;
     const precipitationProbability =
@@ -134,18 +138,34 @@ function normalizeWeatherData(
       applyEnsemble && hourlyComparison?.temperature.average != null
         ? hourlyComparison.temperature.average
         : temperature;
-    const tempDelta = effectiveTemp - temperature;
-    const effectiveApparentTemp =
-      Math.round((apparentTemperature + tempDelta) * 10) / 10;
+    const cloudCoverVal = forecast.hourly.cloud_cover[i] ?? 0;
+    const hourNum = parsedDate.getHours();
+    const isDayHour = hourNum >= 7 && hourNum <= 19;
+    const effectiveApparentTemp = calculatePhysiologicalApparentTemp(
+      effectiveTemp,
+      relativeHumidity,
+      windSpeed,
+      cloudCoverVal,
+      isDayHour
+    );
     const effectiveDewPoint = calculateDewPoint(effectiveTemp, relativeHumidity);
 
-    const cloudCoverVal = forecast.hourly.cloud_cover[i] ?? 0;
-    const reconciledHourlyCode = reconcileWeatherCode(
-      forecast.hourly.weather_code[i],
+    // Se 2 modelli su 3 danno asciutto (0mm o < 0.2mm), non marchiamo l'ora con pioggia
+    const modelCodes = comparisons?.hourly
+      ? [
+          comparisons.hourly.weather_code_meteoswiss_icon_ch2?.[i],
+          comparisons.hourly.weather_code_ecmwf_ifs025?.[i],
+          comparisons.hourly.weather_code_icon_seamless?.[i],
+        ]
+      : undefined;
+
+    const reconciledHourlyCode = resolveHourlyCode({
+      baseCode: forecast.hourly.weather_code[i],
       precipitation,
-      precipitationProbability,
-      cloudCoverVal
-    );
+      cloudCover: cloudCoverVal,
+      temperature: effectiveTemp,
+      modelCodes,
+    });
 
     allHourly.push({
       time: timeIso,
@@ -329,12 +349,21 @@ function normalizeWeatherData(
         ? Math.round(dayComparison.tempMin.average)
         : tempMin;
 
-    const dailyReconciledCode = reconcileWeatherCode(
-      forecast.daily.weather_code[d],
+    const dayHourSamples = dayHourly.map((h) => ({
+      hour: h.hour,
+      weatherCode: h.weatherCode,
+      cloudCover: h.cloudCover,
+    }));
+
+    const dailyReconciledCode = resolveDailyCode(
+      dayHourSamples,
       precipitationSum,
-      forecast.daily.precipitation_probability_max[d] ?? 0,
-      cloudCoverAvg
+      forecast.daily.weather_code[d]
     );
+
+    const apparentTemps = dayHourly.map((h) => h.apparentTemperature);
+    const dayApparentMax = apparentTemps.length ? Math.round(Math.max(...apparentTemps)) : effectiveTempMax;
+    const dayApparentMin = apparentTemps.length ? Math.round(Math.min(...apparentTemps)) : effectiveTempMin;
 
     daily.push({
       date: dateStr,
@@ -344,8 +373,8 @@ function normalizeWeatherData(
       weatherCode: dailyReconciledCode,
       tempMax: effectiveTempMax,
       tempMin: effectiveTempMin,
-      apparentTempMax: Math.round(forecast.daily.apparent_temperature_max[d]),
-      apparentTempMin: Math.round(forecast.daily.apparent_temperature_min[d]),
+      apparentTempMax: dayApparentMax,
+      apparentTempMin: dayApparentMin,
       dewPointMax,
       dewPointMin,
       humidityAvg,
@@ -399,29 +428,64 @@ function normalizeWeatherData(
     }
   }
 
-  // Current weather
+  // Current weather with real-time minute interpolation
+  const now = new Date();
+  const currentMinute = now.getMinutes();
+  const minuteProgress = Math.min(Math.max(currentMinute / 60, 0), 1);
+
   const nowHourIso = forecast.current?.time ? forecast.current.time.slice(0, 13) : '';
   const currentSlotIdx = Math.max(
     0,
     allHourly.findIndex((h) => h.time.startsWith(nowHourIso))
   );
   const currentSlot = allHourly[currentSlotIdx] ?? allHourly[0];
+  const nextSlot = allHourly[currentSlotIdx + 1] ?? currentSlot;
   const cur = forecast.current;
 
-  const currentTemp =
+  // Interpolazione lineare al minuto tra l'ora attuale e l'ora successiva
+  const baseTemp =
     currentSlot?.temperature ??
     (cur?.temperature_2m != null
       ? Math.round(cur.temperature_2m * 10) / 10
       : 15);
-  const currentApparentTemp =
+  const nextTemp = nextSlot?.temperature ?? baseTemp;
+  const currentTemp =
+    Math.round((baseTemp + (nextTemp - baseTemp) * minuteProgress) * 10) / 10;
+
+  const baseApparentTemp =
     currentSlot?.apparentTemperature ??
     (cur?.apparent_temperature != null
       ? Math.round(cur.apparent_temperature * 10) / 10
-      : currentTemp);
-  const currentHumidity =
+      : baseTemp);
+  const nextApparentTemp = nextSlot?.apparentTemperature ?? baseApparentTemp;
+  const currentApparentTemp =
+    Math.round((baseApparentTemp + (nextApparentTemp - baseApparentTemp) * minuteProgress) * 10) / 10;
+
+  const baseHumidity =
     cur?.relative_humidity_2m ?? currentSlot?.relativeHumidity ?? 60;
+  const nextHumidity = nextSlot?.relativeHumidity ?? baseHumidity;
+  const currentHumidity = Math.round(
+    baseHumidity + (nextHumidity - baseHumidity) * minuteProgress
+  );
+
   const currentDewPoint = calculateDewPoint(currentTemp, currentHumidity);
   const dewPointComfort = getDewPointComfort(currentDewPoint).label;
+
+  const baseWindSpeed = Math.round(
+    cur?.wind_speed_10m ?? currentSlot?.windSpeed ?? 10
+  );
+  const nextWindSpeed = nextSlot?.windSpeed ?? baseWindSpeed;
+  const currentWindSpeed = Math.round(
+    baseWindSpeed + (nextWindSpeed - baseWindSpeed) * minuteProgress
+  );
+
+  const baseWindGusts = Math.round(
+    cur?.wind_gusts_10m ?? currentSlot?.windGusts ?? 15
+  );
+  const nextWindGusts = nextSlot?.windGusts ?? baseWindGusts;
+  const currentWindGusts = Math.round(
+    baseWindGusts + (nextWindGusts - baseWindGusts) * minuteProgress
+  );
 
   // Calcolo corretto del trend barometrico confrontando con 3 ore fa
   const pNow = cur?.surface_pressure ?? 1013;
@@ -433,14 +497,13 @@ function normalizeWeatherData(
 
   // Riconciliazione coerenza meteo attuale
   const curPrecip = Math.round((cur?.precipitation ?? 0) * 10) / 10;
-  const curProb = currentSlot?.precipitationProbability ?? 0;
   const curCloud = cur?.cloud_cover ?? currentSlot?.cloudCover ?? 0;
   const rawCurCode = cur?.weather_code ?? currentSlot?.weatherCode ?? 0;
-  const currentReconciledCode = reconcileWeatherCode(
+  const currentReconciledCode = resolveCurrentCode(
     rawCurCode,
     curPrecip,
-    curProb,
-    curCloud
+    curCloud,
+    currentTemp
   );
 
   const current = {
@@ -456,9 +519,9 @@ function normalizeWeatherData(
     visibility: currentSlot?.visibility ? Math.round(currentSlot.visibility / 100) / 10 : 10,
     surfacePressure: Math.round(pNow),
     pressureTrend: currentPressureTrend,
-    windSpeed: Math.round(cur?.wind_speed_10m ?? 0),
+    windSpeed: currentWindSpeed,
     windDirection: cur?.wind_direction_10m ?? 0,
-    windGusts: Math.round(cur?.wind_gusts_10m ?? 0),
+    windGusts: currentWindGusts,
     relativeHumidity: currentHumidity,
     freezingLevel: currentSlot?.freezingLevel ?? 0,
     comparison: currentSlot?.comparison ?? allHourly[0]?.comparison,
@@ -480,12 +543,12 @@ function normalizeWeatherData(
       nitrogenDioxide: Math.round(airQuality.current.nitrogen_dioxide ?? 0),
       ozone: Math.round(airQuality.current.ozone ?? 0),
       pollen: {
-        alder: Math.round(airQuality.current.alder_pollen ?? 0),
-        birch: Math.round(airQuality.current.birch_pollen ?? 0),
-        grass: Math.round(airQuality.current.grass_pollen ?? 0),
-        mugwort: Math.round(airQuality.current.mugwort_pollen ?? 0),
-        olive: Math.round(airQuality.current.olive_pollen ?? 0),
-        ragweed: Math.round(airQuality.current.ragweed_pollen ?? 0),
+        alder: Math.round((airQuality.current.alder_pollen ?? 0) * 10) / 10,
+        birch: Math.round((airQuality.current.birch_pollen ?? 0) * 10) / 10,
+        grass: Math.round((airQuality.current.grass_pollen ?? 0) * 10) / 10,
+        mugwort: Math.round((airQuality.current.mugwort_pollen ?? 0) * 10) / 10,
+        olive: Math.round((airQuality.current.olive_pollen ?? 0) * 10) / 10,
+        ragweed: Math.round((airQuality.current.ragweed_pollen ?? 0) * 10) / 10,
       },
     };
   }
@@ -502,25 +565,44 @@ function normalizeWeatherData(
 }
 
 export function useWeatherData(location: Location, model: WeatherModel) {
-  return useQuery({
-    queryKey: ['weather', location.latitude, location.longitude, model],
-    queryFn: async (): Promise<NormalizedWeatherData> => {
+  // Ticker a 30 secondi per aggiornare l'interpolazione del minuto senza chiamate di rete
+  const [minuteTick, setMinuteTick] = useState(() => Math.floor(Date.now() / 60000));
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setMinuteTick(Math.floor(Date.now() / 60000));
+    }, 30000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const query = useQuery({
+    queryKey: ['weather-raw', location.latitude, location.longitude, model],
+    queryFn: async () => {
       const [forecast, airQuality, comparisons] = await Promise.all([
         fetchForecast(location.latitude, location.longitude, model),
         fetchAirQuality(location.latitude, location.longitude),
         fetchModelComparisons(location.latitude, location.longitude),
       ]);
-
-      return normalizeWeatherData(
-        location,
-        forecast,
-        airQuality,
-        model,
-        comparisons
-      );
+      return { forecast, airQuality, comparisons };
     },
     staleTime: 600000,
     gcTime: 3600000,
     refetchOnWindowFocus: false,
   });
+
+  const normalizedData = useMemo(() => {
+    if (!query.data) return undefined;
+    return normalizeWeatherData(
+      location,
+      query.data.forecast,
+      query.data.airQuality,
+      model,
+      query.data.comparisons
+    );
+  }, [query.data, location, model, minuteTick]);
+
+  return {
+    ...query,
+    data: normalizedData,
+  };
 }

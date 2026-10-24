@@ -63,7 +63,7 @@ export const HeroBentoGrid: React.FC<HeroBentoGridProps> = ({
             <span className="text-[11px] font-medium">Visibilità</span>
             <Eye className="w-3.5 h-3.5 text-sky-400" />
           </div>
-          <div className="text-base font-bold text-white num-tabular">{visVal} <span className="text-xs font-normal text-slate-400">km</span></div>
+          <div className="text-base font-bold text-slate-100 num-tabular">{visVal} <span className="text-xs font-normal text-slate-400">km</span></div>
           <div className="text-[10px] text-slate-400 mt-0.5 truncate">{visLabel}</div>
         </div>
       )}
@@ -75,7 +75,7 @@ export const HeroBentoGrid: React.FC<HeroBentoGridProps> = ({
             <span className="text-[11px] font-medium">Copertura Nubi</span>
             <Cloud className="w-3.5 h-3.5 text-indigo-400" />
           </div>
-          <div className="text-base font-bold text-white num-tabular">{isToday ? `${data.current.cloudCover}%` : `${currentDay.cloudCoverAvg}%`}</div>
+          <div className="text-base font-bold text-slate-100 num-tabular">{isToday ? `${data.current.cloudCover}%` : `${currentDay.cloudCoverAvg}%`}</div>
           <div className="text-[10px] text-slate-400 mt-0.5 truncate">
             {(isToday ? data.current.cloudCover : currentDay.cloudCoverAvg) < 20 ? 'Cielo terso' : (isToday ? data.current.cloudCover : currentDay.cloudCoverAvg) < 60 ? 'Parz. nuvoloso' : 'Cielo coperto'}
           </div>
@@ -91,7 +91,7 @@ export const HeroBentoGrid: React.FC<HeroBentoGridProps> = ({
           </div>
           {displayEaqi !== null ? (
             <div>
-              <div className="text-base font-bold text-white num-tabular">EAQI {displayEaqi}</div>
+              <div className="text-base font-bold text-slate-100 num-tabular">EAQI {displayEaqi}</div>
               <div className="text-[11px] flex items-center justify-between mt-0.5">
                 <span className={`font-semibold ${displayEaqiColor}`}>{displayEaqiLabel}</span>
                 <span className="text-sky-400 group-hover:underline text-[10px]">Dettagli &rarr;</span>
@@ -108,7 +108,7 @@ export const HeroBentoGrid: React.FC<HeroBentoGridProps> = ({
             <span className="text-[11px] font-medium">Pressione &amp; Rugiada</span>
             <Gauge className="w-3.5 h-3.5 text-sky-400" />
           </div>
-          <div className="flex items-center gap-1.5 text-base font-bold text-white num-tabular">
+          <div className="flex items-center gap-1.5 text-base font-bold text-slate-100 num-tabular">
             <span>{isToday ? data.current.surfacePressure : currentDay.pressureAvg} hPa</span>
             {pressureTrend === 'rising' ? <TrendingUp className="w-3.5 h-3.5 text-emerald-400" /> : pressureTrend === 'falling' ? <TrendingDown className="w-3.5 h-3.5 text-rose-400" /> : <Minus className="w-3.5 h-3.5 text-slate-400" />}
           </div>
@@ -125,7 +125,7 @@ export const HeroBentoGrid: React.FC<HeroBentoGridProps> = ({
             <span className="text-[11px] font-medium">Vento</span>
             <Wind className="w-3.5 h-3.5 text-cyan-400" />
           </div>
-          <div className="flex items-center gap-1.5 text-base font-bold text-white num-tabular">
+          <div className="flex items-center gap-1.5 text-base font-bold text-slate-100 num-tabular">
             <span style={getWindArrowStyle(windAngle)} className="inline-block"><ArrowUp className="w-4 h-4 text-cyan-400" /></span>
             <span>{formatWindSpeed(windSpeedVal, preferences.windUnit)}</span>
           </div>
@@ -142,7 +142,7 @@ export const HeroBentoGrid: React.FC<HeroBentoGridProps> = ({
             <span className="text-[11px] font-medium">Umidità Relativa</span>
             <Droplets className="w-3.5 h-3.5 text-blue-400" />
           </div>
-          <div className="text-base font-bold text-white num-tabular">{isToday ? `${data.current.relativeHumidity}%` : `${currentDay.humidityAvg}%`}</div>
+          <div className="text-base font-bold text-slate-100 num-tabular">{isToday ? `${data.current.relativeHumidity}%` : `${currentDay.humidityAvg}%`}</div>
           <div className="w-full bg-slate-800 h-1.5 rounded-full mt-2 overflow-hidden">
             <div className="bg-blue-400 h-full rounded-full transition-all" style={{ width: `${isToday ? data.current.relativeHumidity : currentDay.humidityAvg}%` }} />
           </div>
@@ -156,7 +156,7 @@ export const HeroBentoGrid: React.FC<HeroBentoGridProps> = ({
             <span className="text-[11px] font-medium">Indice UV Max</span>
             <Sun className="w-3.5 h-3.5 text-amber-400" />
           </div>
-          <div className="text-base font-bold text-white num-tabular">{uvInfo.ratioText}</div>
+          <div className="text-base font-bold text-slate-100 num-tabular">{uvInfo.ratioText}</div>
           <div className="w-full bg-slate-800 h-1.5 rounded-full mt-1.5 overflow-hidden">
             <div className={`h-full rounded-full ${uvInfo.bgClass}`} style={{ width: `${uvInfo.progressPct}%` }} />
           </div>
@@ -189,7 +189,7 @@ export const HeroBentoGrid: React.FC<HeroBentoGridProps> = ({
             <span className="text-[11px] font-medium">Zero Termico</span>
             <Mountain className="w-3.5 h-3.5 text-sky-400" />
           </div>
-          <div className="text-base font-bold text-white num-tabular">
+          <div className="text-base font-bold text-slate-100 num-tabular">
             {isToday ? data.current.freezingLevel : currentDay.freezingLevelMax} <span className="text-xs font-normal text-slate-400">m s.l.m.</span>
           </div>
           <div className="text-[10px] text-slate-400 mt-0.5 truncate">

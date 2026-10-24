@@ -1,21 +1,33 @@
 import React from 'react';
 import { Check, Pipette } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
+import { THEME_PALETTES } from '../../utils/themePalettes';
 import type { AppTheme, AppFont, SurfaceStyle, AccentColor } from '../../types/weather.types';
 
 export const AppearanceSettingsTab: React.FC = () => {
   const { preferences, updatePreferences } = useAppStore();
 
-  const themes: { id: AppTheme; label: string; bgPreview: string; cardPreview: string; textPreview: string }[] = [
-    { id: 'dynamic', label: 'Atmosferico', bgPreview: '#0c2338', cardPreview: '#13314c', textPreview: '#f8fafc' },
-    { id: 'light', label: 'Ghiaccio Light', bgPreview: '#e2e8f0', cardPreview: '#ffffff', textPreview: '#0f172a' },
-    { id: 'warm_paper', label: 'Carta Calda', bgPreview: '#ebe3d2', cardPreview: '#fcf9f2', textPreview: '#1c1917' },
-    { id: 'rose_milk', label: 'Quarzo Rosa', bgPreview: '#fbcfe8', cardPreview: '#ffffff', textPreview: '#4a044e' },
-    { id: 'cyberpink', label: 'Notte Berry', bgPreview: '#260621', cardPreview: '#3d0c36', textPreview: '#fdf2f8' },
-    { id: 'forest', label: 'Abete Alpino', bgPreview: '#071912', cardPreview: '#103326', textPreview: '#ecfdf5' },
-    { id: 'ocean', label: 'Blu Abisso', bgPreview: '#061529', cardPreview: '#0f2747', textPreview: '#f0f9ff' },
-    { id: 'oled', label: 'Nero OLED', bgPreview: '#000000', cardPreview: '#121216', textPreview: '#ffffff' },
+  // Le anteprime leggono direttamente le palette reali: quello che vedi e' quello che ottieni
+  const themeList: { id: Exclude<AppTheme, 'custom' | 'slate' | 'swiss'>; label: string }[] = [
+    { id: 'dynamic', label: 'Atmosferico' },
+    { id: 'light', label: 'Ghiaccio Light' },
+    { id: 'warm_paper', label: 'Carta Calda' },
+    { id: 'rose_milk', label: 'Quarzo Rosa' },
+    { id: 'cyberpink', label: 'Notte Berry' },
+    { id: 'forest', label: 'Abete Alpino' },
+    { id: 'ocean', label: 'Blu Abisso' },
+    { id: 'oled', label: 'Nero OLED' },
   ];
+  const themes = themeList.map((t) => {
+    const p = THEME_PALETTES[t.id];
+    return {
+      ...t,
+      bgPreview: p.bgApp,
+      cardPreview: p.neutral[900],
+      textPreview: p.neutral[100],
+      mutedPreview: p.neutral[400],
+    };
+  });
 
   const quickCustomBgs = [
     '#fce7f3', '#ede9fe', '#d1fae5', '#ffedd5', '#fef3c7', '#1e1b4b', '#3b0718', '#111827',
@@ -92,7 +104,7 @@ export const AppearanceSettingsTab: React.FC = () => {
               <button
                 key={t.id}
                 onClick={() => updatePreferences({ theme: t.id })}
-                style={{ backgroundColor: t.bgPreview, color: t.textPreview }}
+                style={{ background: t.bgPreview, color: t.textPreview }}
                 className={`p-2 rounded-xl text-left border transition-all relative overflow-hidden ${
                   isSelected ? 'ring-2 ring-sky-400 border-sky-400 scale-[1.02]' : 'border-slate-700/60 opacity-90'
                 }`}
@@ -102,7 +114,9 @@ export const AppearanceSettingsTab: React.FC = () => {
                   style={{ backgroundColor: t.cardPreview, color: t.textPreview }}
                   className="px-1.5 py-1 rounded-md text-[10px] font-bold mb-1 flex items-center justify-between shadow-sm"
                 >
-                  <span>18°</span>
+                  <span>
+                    18° <span style={{ color: t.mutedPreview }} className="font-medium">9°</span>
+                  </span>
                   {isSelected && <Check className="w-3 h-3" />}
                 </div>
                 <div className="text-[10px] font-bold truncate leading-tight">{t.label}</div>

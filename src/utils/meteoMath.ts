@@ -93,6 +93,53 @@ export function getDewPointComfort(dewPoint: number): {
 }
 
 /**
+ * Calcolo della Temperatura Percepita fisiologica (standard Europeo/WMO)
+ * Risolve la nota anomalia della formula Australiana di Open-Meteo che toglie 4-5°C
+ * con brezza leggera in pieno sole anche a 16°C.
+ * - T <= 10°C e vento > 5 km/h: Wind Chill (NOAA/Environment Canada)
+ * - T >= 26°C e umidità elevata: Heat Index / Humidex (afa)
+ * - 10°C < T < 26°C: Zona di comfort temperata con correzione per sole diretto e brezza
+ */
+export function calculatePhysiologicalApparentTemp(
+  temp: number,
+  relativeHumidity: number,
+  windSpeedKmh: number,
+  cloudCover: number = 0,
+  isDay: boolean = true
+): number {
+  // 1. Wind Chill per basse temperature (T <= 10°C)
+  if (temp <= 10 && windSpeedKmh > 5) {
+    const v = Math.pow(windSpeedKmh, 0.16);
+    const wc = 13.12 + 0.6215 * temp - 11.37 * v + 0.3965 * temp * v;
+    return Math.round(wc * 10) / 10;
+  }
+
+  // 2. Heat Index / Humidex per temperature elevate (T >= 26°C)
+  if (temp >= 26 && relativeHumidity >= 40) {
+    const e =
+      6.112 *
+      Math.pow(10, (7.5 * temp) / (237.7 + temp)) *
+      (relativeHumidity / 100);
+    const humidex = temp + (5 / 9) * (e - 10);
+    return Math.round(Math.max(temp, humidex) * 10) / 10;
+  }
+
+  // 3. Fascia temperata fisiologica (10°C < T < 26°C)
+  // Il sole diretto riscalda la pelle (+0.5° a +1.0° con cielo sereno)
+  let solarBonus = 0;
+  if (isDay) {
+    const clearFactor = Math.max(0, (100 - cloudCover) / 100);
+    solarBonus = 0.8 * clearFactor;
+  }
+
+  // Brezza: attenuazione fisiologica naturale (massimo 1.2°C con brezza a 20 km/h)
+  const windCooling = Math.min(1.4, (windSpeedKmh / 20) * 1.0);
+  const apparent = temp + solarBonus - windCooling;
+
+  return Math.round(apparent * 10) / 10;
+}
+
+/**
  * Official WHO UV scale on /11
  */
 export function getUvInfo(uv: number): {

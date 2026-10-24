@@ -255,6 +255,17 @@ export type BentoCardId =
   | 'sunMoon'
   | 'freezingLevel';
 
+export type WidgetTheme = 'slate_dark' | 'rose_milk' | 'oled' | 'light' | 'glass';
+
+export interface WidgetConfig {
+  theme: WidgetTheme;
+  showRain: boolean;
+  showWind: boolean;
+  showAqi: boolean;
+  showUv: boolean;
+  showHourlyStrip?: boolean;
+}
+
 export interface UserPreferences {
   theme: AppTheme;
   customBgColor: string;
@@ -272,6 +283,7 @@ export interface UserPreferences {
   showHistoricalAlmanac: boolean;
   showBottomRadarPreview: boolean;
   visibleBentoCards: BentoCardId[];
+  widgetConfig?: WidgetConfig;
 }
 
 export interface DailyForecastData {
