@@ -36,20 +36,27 @@ public class WidgetBridgePlugin extends Plugin {
         if (call.hasOption("aqi")) editor.putString("aqi", call.getString("aqi"));
         if (call.hasOption("showUv")) editor.putBoolean("showUv", Boolean.TRUE.equals(call.getBoolean("showUv")));
         if (call.hasOption("uv")) editor.putString("uv", call.getString("uv"));
+        if (call.hasOption("showPressure")) editor.putBoolean("showPressure", Boolean.TRUE.equals(call.getBoolean("showPressure")));
+        if (call.hasOption("pressure")) editor.putString("pressure", call.getString("pressure"));
+        if (call.hasOption("showHumidity")) editor.putBoolean("showHumidity", Boolean.TRUE.equals(call.getBoolean("showHumidity")));
+        if (call.hasOption("humidity")) editor.putString("humidity", call.getString("humidity"));
 
-        if (call.hasOption("showHourlyStrip")) editor.putBoolean("showHourlyStrip", Boolean.TRUE.equals(call.getBoolean("showHourlyStrip")));
-        if (call.hasOption("h1_time")) editor.putString("h1_time", call.getString("h1_time"));
-        if (call.hasOption("h1_icon")) editor.putString("h1_icon", call.getString("h1_icon"));
-        if (call.hasOption("h1_temp")) editor.putString("h1_temp", call.getString("h1_temp"));
-        if (call.hasOption("h2_time")) editor.putString("h2_time", call.getString("h2_time"));
-        if (call.hasOption("h2_icon")) editor.putString("h2_icon", call.getString("h2_icon"));
-        if (call.hasOption("h2_temp")) editor.putString("h2_temp", call.getString("h2_temp"));
-        if (call.hasOption("h3_time")) editor.putString("h3_time", call.getString("h3_time"));
-        if (call.hasOption("h3_icon")) editor.putString("h3_icon", call.getString("h3_icon"));
-        if (call.hasOption("h3_temp")) editor.putString("h3_temp", call.getString("h3_temp"));
-        if (call.hasOption("h4_time")) editor.putString("h4_time", call.getString("h4_time"));
-        if (call.hasOption("h4_icon")) editor.putString("h4_icon", call.getString("h4_icon"));
-        if (call.hasOption("h4_temp")) editor.putString("h4_temp", call.getString("h4_temp"));
+        // 4-Hour Forecast Strip
+        for (int i = 1; i <= 4; i++) {
+            String p = "h" + i + "_";
+            if (call.hasOption(p + "time")) editor.putString(p + "time", call.getString(p + "time"));
+            if (call.hasOption(p + "icon")) editor.putString(p + "icon", call.getString(p + "icon"));
+            if (call.hasOption(p + "temp")) editor.putString(p + "temp", call.getString(p + "temp"));
+        }
+
+        // 5-Day Forecast Rows (for 4x3 and 4x4 widget expansion)
+        for (int i = 1; i <= 5; i++) {
+            String p = "d" + i + "_";
+            if (call.hasOption(p + "day")) editor.putString(p + "day", call.getString(p + "day"));
+            if (call.hasOption(p + "desc")) editor.putString(p + "desc", call.getString(p + "desc"));
+            if (call.hasOption(p + "rain")) editor.putString(p + "rain", call.getString(p + "rain"));
+            if (call.hasOption(p + "temp")) editor.putString(p + "temp", call.getString(p + "temp"));
+        }
 
         editor.apply();
 

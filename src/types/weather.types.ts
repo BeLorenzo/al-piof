@@ -263,7 +263,8 @@ export interface WidgetConfig {
   showWind: boolean;
   showAqi: boolean;
   showUv: boolean;
-  showHourlyStrip?: boolean;
+  showPressure?: boolean;
+  showHumidity?: boolean;
 }
 
 export interface UserPreferences {

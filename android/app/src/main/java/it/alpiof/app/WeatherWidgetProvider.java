@@ -7,6 +7,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Bundle;
 import android.view.View;
 import android.widget.RemoteViews;
 
@@ -19,6 +20,12 @@ public class WeatherWidgetProvider extends AppWidgetProvider {
         for (int appWidgetId : appWidgetIds) {
             updateAppWidget(context, appWidgetManager, appWidgetId);
         }
+    }
+
+    @Override
+    public void onAppWidgetOptionsChanged(Context context, AppWidgetManager appWidgetManager, int appWidgetId, Bundle newOptions) {
+        super.onAppWidgetOptionsChanged(context, appWidgetManager, appWidgetId, newOptions);
+        updateAppWidget(context, appWidgetManager, appWidgetId);
     }
 
     public static void updateAllWidgets(Context context) {
@@ -49,9 +56,13 @@ public class WeatherWidgetProvider extends AppWidgetProvider {
         boolean showWind = prefs.getBoolean("showWind", true);
         String wind = prefs.getString("wind", "-- km/h");
         boolean showAqi = prefs.getBoolean("showAqi", true);
-        String aqi = prefs.getString("aqi", "EAQI --");
-        boolean showUv = prefs.getBoolean("showUv", false);
+        String aqi = prefs.getString("aqi", "AQI --");
+        boolean showUv = prefs.getBoolean("showUv", true);
         String uv = prefs.getString("uv", "UV --");
+        boolean showPressure = prefs.getBoolean("showPressure", false);
+        String pressure = prefs.getString("pressure", "-- hPa");
+        boolean showHumidity = prefs.getBoolean("showHumidity", false);
+        String humidity = prefs.getString("humidity", "--%");
 
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_weather);
 
@@ -63,17 +74,20 @@ public class WeatherWidgetProvider extends AppWidgetProvider {
         );
         views.setOnClickPendingIntent(R.id.widget_root, pendingIntent);
 
-        // Data binding
+        // 1. Header Data binding
         views.setTextViewText(R.id.tv_widget_city, city);
         views.setTextViewText(R.id.tv_widget_time, updateTime);
         views.setTextViewText(R.id.tv_widget_icon, iconEmoji);
         views.setTextViewText(R.id.tv_widget_temp, temp);
         views.setTextViewText(R.id.tv_widget_desc, desc + (subtext.isEmpty() ? "" : " • " + subtext));
 
-        // Chips
+        // 2. Selectable Extra Chips
+        boolean anyChip = false;
+
         if (showRain && rain != null && !rain.isEmpty()) {
             views.setViewVisibility(R.id.chip_rain, View.VISIBLE);
             views.setTextViewText(R.id.tv_widget_rain, "💧 " + rain);
+            anyChip = true;
         } else {
             views.setViewVisibility(R.id.chip_rain, View.GONE);
         }
@@ -81,6 +95,7 @@ public class WeatherWidgetProvider extends AppWidgetProvider {
         if (showWind && wind != null && !wind.isEmpty()) {
             views.setViewVisibility(R.id.chip_wind, View.VISIBLE);
             views.setTextViewText(R.id.tv_widget_wind, "💨 " + wind);
+            anyChip = true;
         } else {
             views.setViewVisibility(R.id.chip_wind, View.GONE);
         }
@@ -88,6 +103,7 @@ public class WeatherWidgetProvider extends AppWidgetProvider {
         if (showAqi && aqi != null && !aqi.isEmpty()) {
             views.setViewVisibility(R.id.chip_aqi, View.VISIBLE);
             views.setTextViewText(R.id.tv_widget_aqi, "🌱 " + aqi);
+            anyChip = true;
         } else {
             views.setViewVisibility(R.id.chip_aqi, View.GONE);
         }
@@ -95,31 +111,88 @@ public class WeatherWidgetProvider extends AppWidgetProvider {
         if (showUv && uv != null && !uv.isEmpty()) {
             views.setViewVisibility(R.id.chip_uv, View.VISIBLE);
             views.setTextViewText(R.id.tv_widget_uv, "☀️ " + uv);
+            anyChip = true;
         } else {
             views.setViewVisibility(R.id.chip_uv, View.GONE);
         }
 
-        // Optional Hourly Strip (if toggled on or if widget is expanded)
-        boolean showHourlyStrip = prefs.getBoolean("showHourlyStrip", false);
-        if (showHourlyStrip) {
-            views.setViewVisibility(R.id.layout_hourly_strip, View.VISIBLE);
-            views.setTextViewText(R.id.tv_h1_time, prefs.getString("h1_time", "13:00"));
-            views.setTextViewText(R.id.tv_h1_icon, prefs.getString("h1_icon", "☀️"));
-            views.setTextViewText(R.id.tv_h1_temp, prefs.getString("h1_temp", "--°"));
-
-            views.setTextViewText(R.id.tv_h2_time, prefs.getString("h2_time", "14:00"));
-            views.setTextViewText(R.id.tv_h2_icon, prefs.getString("h2_icon", "☀️"));
-            views.setTextViewText(R.id.tv_h2_temp, prefs.getString("h2_temp", "--°"));
-
-            views.setTextViewText(R.id.tv_h3_time, prefs.getString("h3_time", "15:00"));
-            views.setTextViewText(R.id.tv_h3_icon, prefs.getString("h3_icon", "☀️"));
-            views.setTextViewText(R.id.tv_h3_temp, prefs.getString("h3_temp", "--°"));
-
-            views.setTextViewText(R.id.tv_h4_time, prefs.getString("h4_time", "16:00"));
-            views.setTextViewText(R.id.tv_h4_icon, prefs.getString("h4_icon", "☀️"));
-            views.setTextViewText(R.id.tv_h4_temp, prefs.getString("h4_temp", "--°"));
+        if (showPressure && pressure != null && !pressure.isEmpty()) {
+            views.setViewVisibility(R.id.chip_pressure, View.VISIBLE);
+            views.setTextViewText(R.id.tv_widget_pressure, "⏲️ " + pressure);
+            anyChip = true;
         } else {
-            views.setViewVisibility(R.id.layout_hourly_strip, View.GONE);
+            views.setViewVisibility(R.id.chip_pressure, View.GONE);
+        }
+
+        if (showHumidity && humidity != null && !humidity.isEmpty()) {
+            views.setViewVisibility(R.id.chip_humidity, View.VISIBLE);
+            views.setTextViewText(R.id.tv_widget_humidity, "💦 " + humidity);
+            anyChip = true;
+        } else {
+            views.setViewVisibility(R.id.chip_humidity, View.GONE);
+        }
+
+        views.setViewVisibility(R.id.ll_widget_chips, anyChip ? View.VISIBLE : View.GONE);
+
+        // 3. Default 4-Hour Strip (Always visible in 4x2 base widget)
+        views.setViewVisibility(R.id.layout_hourly_strip, View.VISIBLE);
+        views.setTextViewText(R.id.tv_h1_time, prefs.getString("h1_time", "13:00"));
+        views.setTextViewText(R.id.tv_h1_icon, prefs.getString("h1_icon", "☀️"));
+        views.setTextViewText(R.id.tv_h1_temp, prefs.getString("h1_temp", "--°"));
+
+        views.setTextViewText(R.id.tv_h2_time, prefs.getString("h2_time", "14:00"));
+        views.setTextViewText(R.id.tv_h2_icon, prefs.getString("h2_icon", "☀️"));
+        views.setTextViewText(R.id.tv_h2_temp, prefs.getString("h2_temp", "--°"));
+
+        views.setTextViewText(R.id.tv_h3_time, prefs.getString("h3_time", "15:00"));
+        views.setTextViewText(R.id.tv_h3_icon, prefs.getString("h3_icon", "☀️"));
+        views.setTextViewText(R.id.tv_h3_temp, prefs.getString("h3_temp", "--°"));
+
+        views.setTextViewText(R.id.tv_h4_time, prefs.getString("h4_time", "16:00"));
+        views.setTextViewText(R.id.tv_h4_icon, prefs.getString("h4_icon", "☀️"));
+        views.setTextViewText(R.id.tv_h4_temp, prefs.getString("h4_temp", "--°"));
+
+        // 4. Dynamic Multi-Day Forecast Section when widget is resized to 4x3 or 4x4
+        Bundle options = appWidgetManager.getAppWidgetOptions(appWidgetId);
+        int minHeight = options != null ? options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 0) : 0;
+
+        if (minHeight >= 165) {
+            views.setViewVisibility(R.id.layout_daily_section, View.VISIBLE);
+
+            views.setTextViewText(R.id.tv_d1_day, prefs.getString("d1_day", "Dom"));
+            views.setTextViewText(R.id.tv_d1_desc, prefs.getString("d1_desc", "☀️ Sereno"));
+            views.setTextViewText(R.id.tv_d1_rain, prefs.getString("d1_rain", ""));
+            views.setTextViewText(R.id.tv_d1_temp, prefs.getString("d1_temp", "--° / --°"));
+
+            views.setTextViewText(R.id.tv_d2_day, prefs.getString("d2_day", "Lun"));
+            views.setTextViewText(R.id.tv_d2_desc, prefs.getString("d2_desc", "☀️ Sereno"));
+            views.setTextViewText(R.id.tv_d2_rain, prefs.getString("d2_rain", ""));
+            views.setTextViewText(R.id.tv_d2_temp, prefs.getString("d2_temp", "--° / --°"));
+
+            views.setTextViewText(R.id.tv_d3_day, prefs.getString("d3_day", "Mar"));
+            views.setTextViewText(R.id.tv_d3_desc, prefs.getString("d3_desc", "☀️ Sereno"));
+            views.setTextViewText(R.id.tv_d3_rain, prefs.getString("d3_rain", ""));
+            views.setTextViewText(R.id.tv_d3_temp, prefs.getString("d3_temp", "--° / --°"));
+
+            if (minHeight >= 240) {
+                views.setViewVisibility(R.id.row_day_4, View.VISIBLE);
+                views.setViewVisibility(R.id.row_day_5, View.VISIBLE);
+
+                views.setTextViewText(R.id.tv_d4_day, prefs.getString("d4_day", "Mer"));
+                views.setTextViewText(R.id.tv_d4_desc, prefs.getString("d4_desc", "☀️ Sereno"));
+                views.setTextViewText(R.id.tv_d4_rain, prefs.getString("d4_rain", ""));
+                views.setTextViewText(R.id.tv_d4_temp, prefs.getString("d4_temp", "--° / --°"));
+
+                views.setTextViewText(R.id.tv_d5_day, prefs.getString("d5_day", "Gio"));
+                views.setTextViewText(R.id.tv_d5_desc, prefs.getString("d5_desc", "☀️ Sereno"));
+                views.setTextViewText(R.id.tv_d5_rain, prefs.getString("d5_rain", ""));
+                views.setTextViewText(R.id.tv_d5_temp, prefs.getString("d5_temp", "--° / --°"));
+            } else {
+                views.setViewVisibility(R.id.row_day_4, View.GONE);
+                views.setViewVisibility(R.id.row_day_5, View.GONE);
+            }
+        } else {
+            views.setViewVisibility(R.id.layout_daily_section, View.GONE);
         }
 
         // Apply theme background and text colors
@@ -164,6 +237,22 @@ public class WeatherWidgetProvider extends AppWidgetProvider {
         views.setTextColor(R.id.tv_h3_temp, textColor);
         views.setTextColor(R.id.tv_h4_time, subTextColor);
         views.setTextColor(R.id.tv_h4_temp, textColor);
+
+        views.setTextColor(R.id.tv_d1_day, textColor);
+        views.setTextColor(R.id.tv_d1_desc, subTextColor);
+        views.setTextColor(R.id.tv_d1_temp, textColor);
+        views.setTextColor(R.id.tv_d2_day, textColor);
+        views.setTextColor(R.id.tv_d2_desc, subTextColor);
+        views.setTextColor(R.id.tv_d2_temp, textColor);
+        views.setTextColor(R.id.tv_d3_day, textColor);
+        views.setTextColor(R.id.tv_d3_desc, subTextColor);
+        views.setTextColor(R.id.tv_d3_temp, textColor);
+        views.setTextColor(R.id.tv_d4_day, textColor);
+        views.setTextColor(R.id.tv_d4_desc, subTextColor);
+        views.setTextColor(R.id.tv_d4_temp, textColor);
+        views.setTextColor(R.id.tv_d5_day, textColor);
+        views.setTextColor(R.id.tv_d5_desc, subTextColor);
+        views.setTextColor(R.id.tv_d5_temp, textColor);
 
         appWidgetManager.updateAppWidget(appWidgetId, views);
     }

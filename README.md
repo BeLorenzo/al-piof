@@ -55,13 +55,13 @@ La maggior parte delle app meteo si affida a un solo modello matematico o prende
 - **Calcolo fisiologico europeo del percepito:** risolto il noto difetto di Open-Meteo (che usa la formula australiana e sottrae 4-5°C a caso con un filo di vento). *Al piöf* adotta lo standard europeo: zona di comfort termico, Wind Chill (solo sotto i 10°C) e Humidex (per il caldo afoso estivo), considerando la radiazione solare reale.
 
 <a id="widget-android"></a>
-### 3. 📱 Widget Android Nativo Personalizzabile
+### 3. 📱 Widget Android Nativo Personalizzabile (4x2 • 4x3 • 4x4)
 Sviluppato nativamente con `RemoteViews` e `AppWidgetProvider` in Java/Android per garantire **zero drain di batteria** e massima fluidità:
-- **Layout intelligente compatto (2 celle):** studiato per non tagliare le scritte su schermi ad alta densità (Google Pixel, Samsung Galaxy, ecc.).
+- **Formato Base 4x2 con Prossime 4 Ore sempre visibili:** progettato per occupare 4x2 celle sulla Home Screen mostrando meteo attuale, card informative scelte e la fascia oraria fissa con l'andamento delle **prossime 4 ore**.
 - **5 Stili grafici dedicati:** *Scuro Slate*, *Quarzo Rosa (Pastello)*, *Nero OLED Puro* (salva-batteria), *Vetro Frosted* e *Chiaro Minimal*.
-- **Informazioni extra configurabili:** attiva o disattiva con una spunta pioggia (% e mm), vento (km/h), qualità dell'aria (EAQI) e indice UV.
-- **Opzione estesa:** se ingrandisci il widget in altezza, mostra la striscia oraria con l'andamento delle prossime 4 ore.
-- **Anteprima 1:1 in-app:** guarda come apparirà il widget direttamente nelle impostazioni prima di posizionarlo sulla Home.
+- **6 Card informative extra a scelta:** attiva o disattiva liberamente **Pioggia (% e mm)**, **Vento (km/h)**, **Qualità dell'Aria (EAQI)**, **Indice UV**, **Pressione Atmosferica (hPa)** e **Umidità Relativa (%)**.
+- **Espansione automatica Giorni Successivi (`4x3` e `4x4`):** ridimensionando il widget in verticale sulla Home Screen in formato **4x3** o **4x4**, compaiono automaticamente sotto le 4 ore anche le previsioni generali dei prossimi giorni (**3 giorni** in 4x3, **5 giorni** in 4x4).
+- **Anteprima interattiva 1:1 in-app:** simula in tempo reale temi, card attive e formati (`4x2` / `4x3` / `4x4`) direttamente nelle impostazioni prima di posizionarlo sulla Home.
 
 ### 4. 🍃 Qualità dell'Aria & Pollini CAMS Copernicus
 Dati in tempo reale dal programma europeo Copernicus:
@@ -71,8 +71,8 @@ Dati in tempo reale dal programma europeo Copernicus:
 ### 5. 📡 Mappa Radar e Precipitazioni Interattiva
 - **Radar & Precipitazioni ECMWF:** animazione dinamica dei nuclei di pioggia con timeline oraria interattiva e nowcast predittivo per monitorare temporali e rovesci in tempo reale.
 
-### 6. 🔄 Aggiornamenti In-App Automatici
-Nessun bisogno di controllare manualmente GitHub: l'app include un leggero checker all'avvio che rileva se è disponibile una nuova release e mostra un banner per scaricare direttamente l'ultimo file `.apk`.
+### 6. 🔄 Aggiornamenti In-App Automatici (Android APK)
+Nessun bisogno di controllare manualmente GitHub: esclusivamente sull'app Android nativa (disattivato su Web/Vercel che si aggiorna in automatico), un checker all'avvio rileva eventuali nuove release e mostra un **modale in sovraimpressione** con l'elenco puntato delle novità per scaricare con un tocco il nuovo `.apk`.
 
 ---
 
@@ -121,7 +121,7 @@ Nessun bisogno di controllare manualmente GitHub: l'app include un leggero check
 
 ### Scaricare l'APK pre-compilato
 1. Vai nella sezione [**Releases**](https://github.com/BeLorenzo/al-piof/releases) di questo repository.
-2. Scarica il file `al-piof-v1.0.0.apk` (o la versione più recente disponibile).
+2. Scarica il file `al-piof-v1.0.3.apk` (o la versione più recente disponibile).
 3. Aprilo sul tuo smartphone Android e conferma l'installazione (autorizzando l'installazione da browser/fonti sconosciute se richiesto).
 4. Vai sulla Home, tieni premuto su uno spazio vuoto $\rightarrow$ **Widget** $\rightarrow$ cerca **Al piöf** e trascinalo sullo schermo!
 

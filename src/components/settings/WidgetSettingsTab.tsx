@@ -1,16 +1,20 @@
-import React from 'react';
-import { Smartphone, Check, CloudRain, Wind, Leaf, Sun, Clock } from 'lucide-react';
+import React, { useState } from 'react';
+import { Smartphone, Check, CloudRain, Wind, Leaf, Sun, Gauge, Droplets, Maximize2 } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import type { WidgetTheme } from '../../types/weather.types';
 
 export const WidgetSettingsTab: React.FC = () => {
   const { preferences, updatePreferences, selectedLocation } = useAppStore();
+  const [previewSize, setPreviewSize] = useState<'4x2' | '4x3' | '4x4'>('4x2');
+
   const widgetConfig = preferences.widgetConfig || {
     theme: 'slate_dark',
     showRain: true,
     showWind: true,
     showAqi: true,
     showUv: true,
+    showPressure: false,
+    showHumidity: false,
   };
 
   const handleUpdate = (partial: Partial<typeof widgetConfig>) => {
@@ -95,11 +99,24 @@ export const WidgetSettingsTab: React.FC = () => {
         <div className="flex items-center justify-between mb-2">
           <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
             <Smartphone className="w-3.5 h-3.5 text-sky-400" />
-            Anteprima Widget Schermata Home
+            Anteprima Widget ({previewSize})
           </span>
-          <span className="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20 font-medium">
-            Sincronizzato
-          </span>
+          <div className="flex items-center gap-1">
+            {(['4x2', '4x3', '4x4'] as const).map((sz) => (
+              <button
+                key={sz}
+                type="button"
+                onClick={() => setPreviewSize(sz)}
+                className={`text-[10px] px-2 py-0.5 rounded-full border font-semibold transition-all ${
+                  previewSize === sz
+                    ? 'text-sky-400 bg-sky-500/15 border-sky-500/30'
+                    : 'text-slate-400 bg-slate-900 border-slate-800 hover:text-slate-300'
+                }`}
+              >
+                {sz}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* 1:1 Phone Widget Container Preview */}
@@ -126,7 +143,7 @@ export const WidgetSettingsTab: React.FC = () => {
           </div>
 
           {/* Chips Row */}
-          <div className="flex flex-wrap gap-1 mt-2.5">
+          <div className="flex flex-wrap gap-1 mt-2">
             {widgetConfig.showRain && (
               <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded-lg border text-[9.5px] font-semibold ${currentThemeStyle.chipBg} ${currentThemeStyle.chipText}`}>
                 <CloudRain className="w-2.5 h-2.5 text-sky-400" />
@@ -151,34 +168,72 @@ export const WidgetSettingsTab: React.FC = () => {
                 <span>UV 3</span>
               </div>
             )}
+            {widgetConfig.showPressure && (
+              <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded-lg border text-[9.5px] font-medium ${currentThemeStyle.chipBg} ${currentThemeStyle.chipText}`}>
+                <Gauge className="w-2.5 h-2.5 text-purple-400" />
+                <span>1016 hPa</span>
+              </div>
+            )}
+            {widgetConfig.showHumidity && (
+              <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded-lg border text-[9.5px] font-medium ${currentThemeStyle.chipBg} ${currentThemeStyle.chipText}`}>
+                <Droplets className="w-2.5 h-2.5 text-cyan-400" />
+                <span>Umid. 54%</span>
+              </div>
+            )}
           </div>
 
-          {/* Hourly strip preview if enabled */}
-          {widgetConfig.showHourlyStrip && (
-            <div className="mt-2.5 pt-2 border-t border-slate-700/50 grid grid-cols-4 gap-1 text-center">
-              <div>
-                <div className="text-[9px] text-slate-400">13:00</div>
-                <div className="text-xs my-0.5">☀️</div>
-                <div className="text-[10px] font-bold text-slate-200">16°</div>
-              </div>
-              <div>
-                <div className="text-[9px] text-slate-400">14:00</div>
-                <div className="text-xs my-0.5">☀️</div>
-                <div className="text-[10px] font-bold text-slate-200">16°</div>
-              </div>
-              <div>
-                <div className="text-[9px] text-slate-400">15:00</div>
-                <div className="text-xs my-0.5">☀️</div>
-                <div className="text-[10px] font-bold text-slate-200">16°</div>
-              </div>
-              <div>
-                <div className="text-[9px] text-slate-400">16:00</div>
-                <div className="text-xs my-0.5">☀️</div>
-                <div className="text-[10px] font-bold text-slate-200">15°</div>
-              </div>
+          {/* 4-Hour Strip (Always visible in 4x2 base widget) */}
+          <div className="mt-2 pt-2 border-t border-slate-700/40 grid grid-cols-4 gap-1 text-center">
+            <div>
+              <div className={`text-[9px] ${currentThemeStyle.time}`}>13:00</div>
+              <div className="text-xs my-0.5">☀️</div>
+              <div className={`text-[10px] font-bold ${currentThemeStyle.temp}`}>16°</div>
+            </div>
+            <div>
+              <div className={`text-[9px] ${currentThemeStyle.time}`}>14:00</div>
+              <div className="text-xs my-0.5">☀️</div>
+              <div className={`text-[10px] font-bold ${currentThemeStyle.temp}`}>16°</div>
+            </div>
+            <div>
+              <div className={`text-[9px] ${currentThemeStyle.time}`}>15:00</div>
+              <div className="text-xs my-0.5">🌤️</div>
+              <div className={`text-[10px] font-bold ${currentThemeStyle.temp}`}>16°</div>
+            </div>
+            <div>
+              <div className={`text-[9px] ${currentThemeStyle.time}`}>16:00</div>
+              <div className="text-xs my-0.5">🌤️</div>
+              <div className={`text-[10px] font-bold ${currentThemeStyle.temp}`}>15°</div>
+            </div>
+          </div>
+
+          {/* Multi-day forecast preview when resized to 4x3 or 4x4 */}
+          {previewSize !== '4x2' && (
+            <div className="mt-2 pt-2 border-t border-slate-700/40 space-y-1">
+              {[
+                { name: 'Domani', icon: '⛅', desc: 'Parz. nuvoloso', temp: '17° / 8°' },
+                { name: 'Lun', icon: '🌧️', desc: 'Pioggia • 65%', temp: '14° / 7°' },
+                { name: 'Mar', icon: '☀️', desc: 'Cielo sereno', temp: '18° / 6°' },
+                ...(previewSize === '4x4'
+                  ? [
+                      { name: 'Mer', icon: '🌤️', desc: 'Poco nuvoloso', temp: '19° / 8°' },
+                      { name: 'Gio', icon: '☀️', desc: 'Cielo sereno', temp: '20° / 9°' },
+                    ]
+                  : []),
+              ].map((d) => (
+                <div key={d.name} className="flex items-center justify-between text-[10px]">
+                  <span className={`w-12 font-bold ${currentThemeStyle.temp}`}>{d.name}</span>
+                  <span className="w-6 text-center">{d.icon}</span>
+                  <span className={`flex-1 truncate px-1 ${currentThemeStyle.desc}`}>{d.desc}</span>
+                  <span className={`font-bold num-tabular ${currentThemeStyle.temp}`}>{d.temp}</span>
+                </div>
+              ))}
             </div>
           )}
         </div>
+        <p className="text-[10px] text-slate-400 mt-1.5 flex items-center gap-1">
+          <Maximize2 className="w-3 h-3 text-sky-400 shrink-0" />
+          Di base il widget è <strong>4x2</strong> con le prossime 4 ore sempre visibili. Allungandolo sulla Home a <strong>4x3</strong> o <strong>4x4</strong> compaiono in automatico i prossimi giorni!
+        </p>
       </div>
 
       {/* Theme Picker */}
@@ -213,7 +268,7 @@ export const WidgetSettingsTab: React.FC = () => {
       {/* Metric Toggles */}
       <div className="space-y-2">
         <label className="text-xs font-semibold text-slate-300">
-          Informazioni Extra da Mostrare
+          Card Informazioni a Scelta (mostrate sopra le 4 ore)
         </label>
         <div className="space-y-1.5">
           <label className="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/60 border border-slate-800/80 cursor-pointer hover:border-slate-700 transition-colors">
@@ -270,13 +325,26 @@ export const WidgetSettingsTab: React.FC = () => {
 
           <label className="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/60 border border-slate-800/80 cursor-pointer hover:border-slate-700 transition-colors">
             <div className="flex items-center gap-2 text-xs text-slate-200">
-              <Clock className="w-4 h-4 text-sky-400" />
-              <span>Andamento prossime 4 ore (se allarghi o alzi il widget)</span>
+              <Gauge className="w-4 h-4 text-purple-400" />
+              <span>Pressione Atmosferica (hPa)</span>
             </div>
             <input
               type="checkbox"
-              checked={widgetConfig.showHourlyStrip ?? false}
-              onChange={(e) => handleUpdate({ showHourlyStrip: e.target.checked })}
+              checked={widgetConfig.showPressure ?? false}
+              onChange={(e) => handleUpdate({ showPressure: e.target.checked })}
+              className="w-4 h-4 rounded text-sky-500 focus:ring-0 bg-slate-800 border-slate-700"
+            />
+          </label>
+
+          <label className="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/60 border border-slate-800/80 cursor-pointer hover:border-slate-700 transition-colors">
+            <div className="flex items-center gap-2 text-xs text-slate-200">
+              <Droplets className="w-4 h-4 text-cyan-400" />
+              <span>Umidità Relativa (%)</span>
+            </div>
+            <input
+              type="checkbox"
+              checked={widgetConfig.showHumidity ?? false}
+              onChange={(e) => handleUpdate({ showHumidity: e.target.checked })}
               className="w-4 h-4 rounded text-sky-500 focus:ring-0 bg-slate-800 border-slate-700"
             />
           </label>

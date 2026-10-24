@@ -53,6 +53,8 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
     showWind: true,
     showAqi: true,
     showUv: true,
+    showPressure: false,
+    showHumidity: false,
   },
 };
 
