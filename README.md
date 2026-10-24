@@ -19,12 +19,13 @@
   <img src="docs/images/preview_widget.png" width="23%" alt="Configuratore Widget Android" />
 </p>
 
-[Caratteristiche](#-caratteristiche-principali) • [La Genesi: Vibe Coding](#-la-genesi-esperimento-di-pure-vibe-coding) • [Widget Android](#-widget-android-nativo) • [Architettura](#-architettura-tecnica) • [Installazione](#-installazione--download-apk)
+[Caratteristiche](#caratteristiche) • [La Genesi: Vibe Coding](#vibe-coding) • [Widget Android](#widget-android) • [Architettura](#architettura) • [Installazione](#installazione)
 
 </div>
 
 ---
 
+<a id="vibe-coding"></a>
 ## 💡 La Genesi: Esperimento di "Pure Vibe Coding"
 
 Tutto nasce da uno **sbatti quotidiano**: aprire le consuete app meteo commerciali (3B Meteo, IlMeteo, ecc.) e dover aspettare 30 secondi di pubblicità video non skippabili, schivare banner invasivi a tutto schermo e leggere previsioni spesso basate su modelli globali generici a bassa risoluzione che sulle Prealpi e in Pianura Padana faticano a cogliere microclimi e temporali improvvisi.
@@ -39,6 +40,7 @@ La risposta è **Al piöf** (*"Piove"*, in dialetto lombardo/bergamasco):
 
 ---
 
+<a id="caratteristiche"></a>
 ## ⚡ Caratteristiche Principali
 
 ### 1. 🤖 Algoritmo di Consenso Multi-Modello (Regola del 2-su-3)
@@ -52,6 +54,7 @@ La maggior parte delle app meteo si affida a un solo modello matematico o prende
 - **Interpolazione al minuto:** tra un'ora e l'altra la temperatura non resta congelata al valore fisso di inizio ora, ma viene interpolata matematicamente al minuto, rispecchiando l'esatta curva termica di riscaldamento/raffreddamento senza fare chiamate di rete inutili.
 - **Calcolo fisiologico europeo del percepito:** risolto il noto difetto di Open-Meteo (che usa la formula australiana e sottrae 4-5°C a caso con un filo di vento). *Al piöf* adotta lo standard europeo: zona di comfort termico, Wind Chill (solo sotto i 10°C) e Humidex (per il caldo afoso estivo), considerando la radiazione solare reale.
 
+<a id="widget-android"></a>
 ### 3. 📱 Widget Android Nativo Personalizzabile
 Sviluppato nativamente con `RemoteViews` e `AppWidgetProvider` in Java/Android per garantire **zero drain di batteria** e massima fluidità:
 - **Layout intelligente compatto (2 celle):** studiato per non tagliare le scritte su schermi ad alta densità (Google Pixel, Samsung Galaxy, ecc.).
@@ -73,6 +76,7 @@ Nessun bisogno di controllare manualmente GitHub: l'app include un leggero check
 
 ---
 
+<a id="architettura"></a>
 ## 🛠️ Architettura Tecnica
 
 ```text
@@ -112,6 +116,7 @@ Nessun bisogno di controllare manualmente GitHub: l'app include un leggero check
 
 ---
 
+<a id="installazione"></a>
 ## 🚀 Installazione & Download APK
 
 ### Scaricare l'APK pre-compilato
