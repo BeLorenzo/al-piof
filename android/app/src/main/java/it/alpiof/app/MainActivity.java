@@ -8,5 +8,6 @@ public class MainActivity extends BridgeActivity {
     public void onCreate(Bundle savedInstanceState) {
         registerPlugin(WidgetBridgePlugin.class);
         super.onCreate(savedInstanceState);
+        WeatherWidgetWorker.enqueuePeriodicWork(this);
     }
 }

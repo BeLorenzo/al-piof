@@ -83,6 +83,10 @@ export async function syncWidgetWithData(
     const startIdx = currentIdx >= 0 ? currentIdx + 1 : 12;
 
     const payload: Record<string, string | boolean | undefined> = {
+      lat: String(data.location.latitude),
+      lon: String(data.location.longitude),
+      model: data.modelUsed,
+      isCurrentLocation: Boolean(data.location.isCurrentLocation),
       city: cityName,
       temp: tempStr,
       desc: shortCondition,

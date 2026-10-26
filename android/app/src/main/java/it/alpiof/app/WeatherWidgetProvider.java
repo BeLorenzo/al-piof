@@ -14,12 +14,65 @@ import android.widget.RemoteViews;
 public class WeatherWidgetProvider extends AppWidgetProvider {
 
     public static final String PREFS_NAME = "alpiof_widget_prefs";
+    public static final String ACTION_REFRESH_WIDGET = "it.alpiof.app.ACTION_REFRESH_WIDGET";
+
+    @Override
+    public void onReceive(Context context, Intent intent) {
+        if (intent != null && ACTION_REFRESH_WIDGET.equals(intent.getAction())) {
+            final Context appContext = context.getApplicationContext();
+            final SharedPreferences prefs = appContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+            final String previousTime = prefs.getString("updateTime", "--:--");
+            prefs.edit().putString("updateTime", "↻ ...").apply();
+            updateAllWidgets(appContext);
+
+            final PendingResult result = goAsync();
+            new Thread(() -> {
+                try {
+                    boolean ok = WeatherWidgetUpdater.fetchAndUpdateSync(appContext);
+                    if (!ok) {
+                        String fallbackTime = "↻ ...".equals(previousTime) ? "--:--" : previousTime;
+                        prefs.edit().putString("updateTime", fallbackTime).apply();
+                        updateAllWidgets(appContext);
+                    }
+                } finally {
+                    result.finish();
+                }
+            }).start();
+            return;
+        }
+        super.onReceive(context, intent);
+    }
+
+    @Override
+    public void onEnabled(Context context) {
+        super.onEnabled(context);
+        WeatherWidgetWorker.enqueuePeriodicWork(context);
+        final Context appContext = context.getApplicationContext();
+        final PendingResult result = goAsync();
+        new Thread(() -> {
+            try {
+                WeatherWidgetUpdater.fetchAndUpdateSync(appContext);
+            } finally {
+                result.finish();
+            }
+        }).start();
+    }
 
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
+        WeatherWidgetWorker.enqueuePeriodicWork(context);
         for (int appWidgetId : appWidgetIds) {
             updateAppWidget(context, appWidgetManager, appWidgetId);
         }
+        final Context appContext = context.getApplicationContext();
+        final PendingResult result = goAsync();
+        new Thread(() -> {
+            try {
+                WeatherWidgetUpdater.fetchAndUpdateSync(appContext);
+            } finally {
+                result.finish();
+            }
+        }).start();
     }
 
     @Override
@@ -73,6 +126,17 @@ public class WeatherWidgetProvider extends AppWidgetProvider {
             PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
         views.setOnClickPendingIntent(R.id.widget_root, pendingIntent);
+
+        // Click on right section (temp and time) triggers instant background refresh
+        Intent refreshIntent = new Intent(context, WeatherWidgetProvider.class);
+        refreshIntent.setAction(ACTION_REFRESH_WIDGET);
+        refreshIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
+        PendingIntent refreshPendingIntent = PendingIntent.getBroadcast(
+            context, appWidgetId, refreshIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
+        views.setOnClickPendingIntent(R.id.tv_widget_temp, refreshPendingIntent);
+        views.setOnClickPendingIntent(R.id.tv_widget_time, refreshPendingIntent);
 
         // 1. Header Data binding
         views.setTextViewText(R.id.tv_widget_city, city);

@@ -37,6 +37,7 @@ export const TopBar: React.FC<TopBarProps> = ({ onOpenSearch }) => {
 
   const { getCurrentLocation, isLoading: isGpsLoading } = useGeolocation();
   const isFav = isFavorite(selectedLocation.id);
+  const isGpsActive = Boolean(selectedLocation.isCurrentLocation);
 
   return (
     <header className="sticky top-0 z-40 bg-slate-950/85 backdrop-blur-md border-b border-slate-800/80 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-2.5">
@@ -116,8 +117,12 @@ export const TopBar: React.FC<TopBarProps> = ({ onOpenSearch }) => {
           <button
             onClick={() => getCurrentLocation()}
             disabled={isGpsLoading}
-            title="Usa posizione GPS"
-            className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-sky-400 transition-colors disabled:opacity-50"
+            title={isGpsActive ? 'Posizione GPS attiva (clicca per aggiornare)' : 'Usa posizione GPS'}
+            className={`p-1.5 rounded-lg border transition-all disabled:opacity-50 ${
+              isGpsActive
+                ? 'bg-sky-500/20 border-sky-500/40 text-sky-300 shadow-sm shadow-sky-950'
+                : 'bg-transparent border-transparent hover:bg-slate-800 text-slate-400 hover:text-sky-400'
+            }`}
           >
             {isGpsLoading ? (
               <Loader2 className="w-4 h-4 animate-spin text-sky-400" />
@@ -144,7 +149,7 @@ export const TopBar: React.FC<TopBarProps> = ({ onOpenSearch }) => {
             return (
               <button
                 key={fav.id}
-                onClick={() => setSelectedLocation(fav)}
+                onClick={() => setSelectedLocation({ ...fav, isCurrentLocation: false })}
                 className={`shrink-0 text-xs px-2.5 py-1 rounded-full border transition-all ${
                   active
                     ? 'bg-sky-500/20 border-sky-500/60 text-sky-200 font-medium shadow-sm shadow-sky-950'

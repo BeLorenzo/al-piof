@@ -58,7 +58,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
   if (!isOpen) return null;
 
   const handleSelect = (loc: Location) => {
-    setSelectedLocation(loc);
+    setSelectedLocation({ ...loc, isCurrentLocation: false });
     onClose();
   };
 

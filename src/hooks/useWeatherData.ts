@@ -587,7 +587,8 @@ export function useWeatherData(location: Location, model: WeatherModel) {
     },
     staleTime: 600000,
     gcTime: 3600000,
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
   });
 
   const normalizedData = useMemo(() => {

@@ -1,6 +1,7 @@
-import { useLayoutEffect, useState, useEffect } from 'react';
+import { useLayoutEffect, useState, useEffect, useRef } from 'react';
 import { useAppStore } from './store/useAppStore';
 import { useWeatherData } from './hooks/useWeatherData';
+import { useGeolocation } from './hooks/useGeolocation';
 import { TopBar } from './components/layout/TopBar';
 import { RefreshStatusBar } from './components/layout/RefreshStatusBar';
 import { UpdateNotificationBanner } from './components/layout/UpdateNotificationBanner';
@@ -33,10 +34,57 @@ export default function App() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isAirQualityOpen, setIsAirQualityOpen] = useState(false);
 
+  const { getCurrentLocation } = useGeolocation();
+  const lastForegroundRefresh = useRef<number>(0);
+
   const { data, isLoading, isFetching, isError, error, refetch } = useWeatherData(
     selectedLocation,
     selectedModel
   );
+
+  // Auto-refresh posizione GPS e dati all'apertura e al ritorno in foreground
+  useEffect(() => {
+    const handleForegroundSync = async () => {
+      const now = Date.now();
+      if (now - lastForegroundRefresh.current < 60000) {
+        return;
+      }
+      lastForegroundRefresh.current = now;
+
+      const currentLoc = useAppStore.getState().selectedLocation;
+      if (currentLoc.isCurrentLocation) {
+        await getCurrentLocation({ silent: true });
+        const afterLoc = useAppStore.getState().selectedLocation;
+        const locChanged =
+          afterLoc.latitude !== currentLoc.latitude ||
+          afterLoc.longitude !== currentLoc.longitude;
+        if (!locChanged) {
+          refetch();
+        }
+      } else {
+        refetch();
+      }
+    };
+
+    handleForegroundSync();
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        handleForegroundSync();
+      }
+    };
+    const onFocus = () => {
+      handleForegroundSync();
+    };
+
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    window.addEventListener('focus', onFocus);
+
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      window.removeEventListener('focus', onFocus);
+    };
+  }, [getCurrentLocation, refetch]);
 
   const currentDay = data?.daily[selectedDayIndex] || data?.daily[0];
 

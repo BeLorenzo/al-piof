@@ -21,6 +21,10 @@ public class WidgetBridgePlugin extends Plugin {
         SharedPreferences.Editor editor = prefs.edit();
 
         if (call.hasOption("city")) editor.putString("city", call.getString("city"));
+        if (call.hasOption("lat")) editor.putString("lat", call.getString("lat"));
+        if (call.hasOption("lon")) editor.putString("lon", call.getString("lon"));
+        if (call.hasOption("model")) editor.putString("model", call.getString("model"));
+        if (call.hasOption("isCurrentLocation")) editor.putBoolean("isCurrentLocation", Boolean.TRUE.equals(call.getBoolean("isCurrentLocation")));
         if (call.hasOption("temp")) editor.putString("temp", call.getString("temp"));
         if (call.hasOption("desc")) editor.putString("desc", call.getString("desc"));
         if (call.hasOption("iconEmoji")) editor.putString("iconEmoji", call.getString("iconEmoji"));
@@ -61,6 +65,7 @@ public class WidgetBridgePlugin extends Plugin {
         editor.apply();
 
         WeatherWidgetProvider.updateAllWidgets(context);
+        WeatherWidgetWorker.enqueuePeriodicWork(context);
 
         JSObject ret = new JSObject();
         ret.put("success", true);
